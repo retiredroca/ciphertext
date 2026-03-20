@@ -16,25 +16,22 @@
         <path d="M8 10V8a3 3 0 016 0v2" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
       </svg>
       <span class="logo-name">CryptoChat</span>
-      <span class="version">v0.6</span>
+      <span class="version">v0.7</span>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <a id="gh-header-link" href="https://github.com/retiredroca/CryptoChat" target="_blank"
-         title="GitHub" style="color:var(--tx3);display:flex;align-items:center;line-height:0">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483
-            0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466
-            -.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832
-            .092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688
-            -.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004
-            1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651
-            .64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855
-            0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017
-            C22 6.484 17.522 2 12 2z"/>
-        </svg>
-      </a>
-      <div id="status-dot" class="dot inactive" title="No supported platform"></div>
-    </div>
+    <a id="gh-header-link" href="https://github.com/retiredroca/CryptoChat" target="_blank"
+       title="GitHub" style="color:var(--tx3);display:flex;align-items:center;line-height:0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483
+          0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466
+          -.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832
+          .092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688
+          -.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004
+          1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651
+          .64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855
+          0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017
+          C22 6.484 17.522 2 12 2z"/>
+      </svg>
+    </a>
   </header>
 
   <nav class="tabs">
@@ -47,14 +44,10 @@
   <!-- ══════════════════════════════════════════════════════ COMPOSE -->
   <div class="panel active" id="tab-compose">
 
-    <div id="platform-bar" class="platform-bar">
-      <span id="platform-label">Detecting platform…</span>
-    </div>
-
     <!-- Mode toggle -->
     <div class="mode-row">
       <button id="mode-1to1"  class="mode-btn active" data-mode="1to1">1:1</button>
-      <button id="mode-group" class="mode-btn"         data-mode="group">
+      <button id="mode-group" class="mode-btn" data-mode="group">
         Group
         <span class="new-badge">NEW</span>
       </button>
@@ -78,7 +71,7 @@
       <div id="group-empty" class="group-empty">No contacts — add some first.</div>
     </div>
 
-    <!-- Message input -->
+    <!-- Message -->
     <label class="field-label">
       Message
       <span class="algo-badge">AES-256-GCM · ECDH</span>
@@ -109,24 +102,15 @@
 
     <div id="contacts-list"></div>
 
-    <!-- Add contact form -->
     <details class="add-contact-details" id="add-contact-section">
       <summary class="add-contact-summary">+ Add contact</summary>
       <div class="add-contact-body">
 
         <label class="field-label">Handle <span class="hint">(e.g. @alice or alice#1234)</span></label>
-        <input id="nc-handle"   class="text-input" placeholder="@alice" />
+        <input id="nc-handle" class="text-input" placeholder="@alice" />
 
-        <label class="field-label" style="margin-top:8px">Platform</label>
-        <select id="nc-platform" class="text-input">
-          <option value="discord">Discord</option>
-          <option value="slack">Slack</option>
-          <option value="whatsapp">WhatsApp Web</option>
-          <option value="telegram">Telegram Web</option>
-          <option value="instagram">Instagram</option>
-          <option value="twitter">X / Twitter</option>
-          <option value="facebook">Facebook Messenger</option>
-        </select>
+        <label class="field-label" style="margin-top:8px">Site / app <span class="hint">(optional label)</span></label>
+        <input id="nc-site" class="text-input" placeholder="e.g. Signal, Reddit, work chat…" />
 
         <label class="field-label" style="margin-top:8px">Display name <span class="hint">(optional)</span></label>
         <input id="nc-displayname" class="text-input" placeholder="Alice" />
@@ -162,15 +146,14 @@
 
   <!-- ══════════════════════════════════════════════════════ KEYS -->
   <div class="panel hidden" id="tab-keys">
+
     <div class="card">
       <div class="card-title">Your public key</div>
       <div class="card-sub">Share this with contacts. It's safe to send publicly.</div>
-
       <div class="fp-row" id="fp-row">
         <span class="fp-label">Fingerprint</span>
         <code id="my-fingerprint" class="fp-val">—</code>
       </div>
-
       <pre id="my-pubkey" class="key-pre mono">Loading…</pre>
       <div class="row-gap" style="margin-top:8px">
         <button id="btn-copy-key"     class="btn-ghost btn-sm">Copy key</button>
@@ -178,32 +161,17 @@
       </div>
     </div>
 
-    <!-- ── Share link ── -->
+    <!-- Share link -->
     <div class="card" id="card-share">
       <div class="card-title">Share your key</div>
       <div class="card-sub">
-        Generate a link anyone can click to add you as a contact instantly — no manual key pasting needed.
+        Generate a link anyone can click to add you as a contact instantly.
       </div>
-
       <label class="field-label">Your handle <span class="hint">(how contacts will see you)</span></label>
       <input id="share-handle" class="text-input" placeholder="@yourname" />
-
-      <label class="field-label" style="margin-top:8px">Platform</label>
-      <select id="share-platform" class="text-input">
-        <option value="discord">Discord</option>
-        <option value="slack">Slack</option>
-        <option value="whatsapp">WhatsApp Web</option>
-        <option value="telegram">Telegram Web</option>
-        <option value="instagram">Instagram</option>
-        <option value="twitter">X / Twitter</option>
-        <option value="facebook">Facebook Messenger</option>
-      </select>
-
       <label class="field-label" style="margin-top:8px">Display name <span class="hint">(optional)</span></label>
       <input id="share-displayname" class="text-input" placeholder="Your Name" />
-
       <button id="btn-gen-link" class="btn-primary btn-sm" style="margin-top:10px">Generate share link</button>
-
       <div id="share-result" class="hidden" style="margin-top:10px">
         <label class="field-label">Your share link</label>
         <div class="share-link-box">
@@ -212,7 +180,7 @@
         </div>
         <div class="hint" style="margin-top:5px">
           Anyone who clicks this link and has CryptoChat installed can add you in one click.
-          The link contains only your public key — it's safe to share anywhere.
+          The link contains only your public key — safe to share anywhere.
         </div>
       </div>
       <div id="share-err" class="err-banner hidden" style="margin-top:8px"></div>
@@ -224,7 +192,7 @@
       <button id="btn-revoke" class="btn-danger btn-sm" style="margin-top:10px">Revoke identity</button>
     </div>
 
-    <!-- ── Export ── -->
+    <!-- Export -->
     <div class="card" id="card-export">
       <div class="card-title">Export backup</div>
       <div class="card-sub">
@@ -238,30 +206,25 @@
       </div>
       <label class="field-label" style="margin-top:8px">Confirm passphrase</label>
       <input type="password" id="export-pass2" class="text-input" placeholder="Repeat passphrase" />
-      <button id="btn-export" class="btn-primary btn-sm" style="margin-top:10px">
-        Download .ccbackup
-      </button>
+      <button id="btn-export" class="btn-primary btn-sm" style="margin-top:10px">Download .ccbackup</button>
       <div id="export-err" class="err-banner hidden" style="margin-top:8px"></div>
       <div id="export-ok"  class="ok-banner  hidden" style="margin-top:8px"></div>
     </div>
 
-    <!-- ── Import ── -->
+    <!-- Import -->
     <div class="card" id="card-import">
       <div class="card-title">Import backup</div>
-      <div class="card-sub">Restore from a <code>.ccbackup</code> file. Choose merge to keep existing contacts, or replace to overwrite everything.</div>
-
+      <div class="card-sub">Restore from a <code>.ccbackup</code> file. Merge keeps existing contacts; replace overwrites everything.</div>
       <label class="field-label" style="margin-top:4px">Backup file</label>
       <div class="file-drop-zone" id="import-drop">
         <span id="import-drop-label">Drop .ccbackup here or <label for="import-file-input" class="file-link">browse</label></span>
         <input type="file" id="import-file-input" accept=".ccbackup,.json" style="display:none" />
       </div>
-
       <label class="field-label" style="margin-top:8px">Passphrase</label>
       <div class="row-gap">
         <input type="password" id="import-pass" class="text-input" placeholder="Passphrase used when exporting" style="flex:1" />
         <button id="btn-show-import-pass" class="btn-ghost btn-xs" data-visible="0">Show</button>
       </div>
-
       <label class="field-label" style="margin-top:8px">Mode</label>
       <div class="mode-row" style="margin-bottom:2px">
         <button class="mode-btn active" id="import-mode-merge"   data-imode="merge">Merge contacts</button>
@@ -270,10 +233,7 @@
       <div id="import-mode-desc" class="hint" style="margin-bottom:4px">
         Merge: keeps your existing contacts and adds new ones from the backup.
       </div>
-
-      <button id="btn-import" class="btn-primary btn-sm" disabled style="margin-top:6px">
-        Import backup
-      </button>
+      <button id="btn-import" class="btn-primary btn-sm" disabled style="margin-top:6px">Import backup</button>
       <div id="import-err" class="err-banner hidden" style="margin-top:8px"></div>
       <div id="import-ok"  class="ok-banner  hidden" style="margin-top:8px"></div>
     </div>
@@ -281,18 +241,6 @@
 
   <!-- ══════════════════════════════════════════════════════ SETTINGS -->
   <div class="panel hidden" id="tab-settings">
-    <div class="card">
-      <div class="card-title">Supported platforms</div>
-      <div class="plat-grid">
-        <div class="plat"><span>Discord</span><span class="on">Active</span></div>
-        <div class="plat"><span>Slack</span><span class="on">Active</span></div>
-        <div class="plat"><span>WhatsApp Web</span><span class="on">Active</span></div>
-        <div class="plat"><span>Telegram Web</span><span class="on">Active</span></div>
-        <div class="plat"><span>Instagram DMs</span><span class="on">Active</span></div>
-        <div class="plat"><span>X / Twitter DMs</span><span class="on">Active</span></div>
-        <div class="plat"><span>Facebook Messenger</span><span class="on">Active</span></div>
-      </div>
-    </div>
 
     <div class="card">
       <div class="card-title">Preferences</div>
@@ -301,18 +249,19 @@
         <label class="toggle"><input type="checkbox" id="pref-blur" checked><span></span></label>
       </div>
       <div class="setting">
-        <div><div class="sname">Auto-detect recipient</div><div class="sdesc">Pre-fill from current DM context</div></div>
+        <div><div class="sname">Auto-detect recipient</div><div class="sdesc">Pre-fill from current context</div></div>
         <label class="toggle"><input type="checkbox" id="pref-auto" checked><span></span></label>
       </div>
     </div>
 
     <div class="card">
       <div class="card-title">About</div>
-      <div class="about"><span class="al">Version</span><span>0.2.0</span></div>
+      <div class="about"><span class="al">Version</span><span>0.7.0</span></div>
       <div class="about"><span class="al">Crypto</span><span>ECDH P-256 · AES-256-GCM · AES-KW</span></div>
       <div class="about"><span class="al">Group</span><span>Per-message DEK, per-recipient slot</span></div>
       <div class="about"><span class="al">GPG</span><span>ECC (P-256/384/521) native bridge</span></div>
       <div class="about"><span class="al">Keys stored</span><span>Local only (IndexedDB)</span></div>
+      <div class="about"><span class="al">Works on</span><span>Any web page with a text input</span></div>
     </div>
   </div>
 

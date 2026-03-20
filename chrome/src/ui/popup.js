@@ -41,40 +41,6 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   PLATFORM DETECTION
-═══════════════════════════════════════════════════════════════ */
-
-const PLATFORMS = {
-  'discord.com':        'Discord',
-  'app.slack.com':      'Slack',
-  'web.whatsapp.com':   'WhatsApp Web',
-  'web.telegram.org':   'Telegram Web',
-  'www.instagram.com':  'Instagram DMs',
-  'x.com':              'X / Twitter DMs',
-  'twitter.com':        'X / Twitter DMs',
-  'www.facebook.com':   'Facebook Messenger',
-  'messenger.com':      'Facebook Messenger',
-};
-
-async function detectPlatform() {
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const url   = tab?.url || '';
-    const match = Object.entries(PLATFORMS).find(([h]) => url.includes(h));
-    const bar   = $('platform-bar');
-    const label = $('platform-label');
-    const dot   = $('status-dot');
-    if (match) {
-      bar.classList.add('active');
-      label.textContent = `Active on ${match[1]}`;
-      dot.className = 'dot active';
-    } else {
-      label.textContent = 'Open Discord, Slack, WhatsApp Web or Telegram Web';
-    }
-  } catch (_) {}
-}
-
-/* ═══════════════════════════════════════════════════════════════
    COMPOSE — 1:1 & GROUP
 ═══════════════════════════════════════════════════════════════ */
 
@@ -90,7 +56,7 @@ async function initCompose() {
   contacts.forEach(c => {
     const opt = document.createElement('option');
     opt.value = JSON.stringify({ handle: c.handle, platform: c.platform, publicKeyB64: c.publicKeyB64 });
-    opt.textContent = `${c.displayName || c.handle} (${c.platform})`;
+    opt.textContent = `${c.displayName || c.handle}`;
     if (!c.publicKeyB64) opt.textContent += ' ⚠ no key';
     sel.appendChild(opt);
   });
@@ -113,7 +79,6 @@ async function initCompose() {
         <div class="gi-check">${groupSelected.has(key) ? '✓' : ''}</div>
         <div class="gi-info">
           <div class="gi-name">${esc(c.displayName || c.handle)}</div>
-          <div class="gi-sub">${esc(c.platform)}</div>
           ${c.fingerprint ? `<div class="gi-fp">${fmtFp(c.fingerprint)}</div>` : ''}
         </div>
       `;
@@ -296,7 +261,7 @@ async function previewGpgKey() {
 
 async function saveContactAction() {
   const handle      = $('nc-handle').value.trim();
-  const platform    = $('nc-platform').value;
+  const site        = $('nc-site').value.trim() || 'web';
   const displayName = $('nc-displayname').value.trim();
 
   const isGpg = document.querySelector('.key-type-btn[data-ktype="gpg"]').classList.contains('active');
@@ -304,11 +269,10 @@ async function saveContactAction() {
   const pubKeyGpg    = $('nc-pubkey-gpg').value.trim();
 
   if (!handle) { showErr('contact-err', 'Handle is required'); return; }
-  if (!platform) { showErr('contact-err', 'Platform is required'); return; }
   if (isGpg && !pubKeyGpg) { showErr('contact-err', 'Paste a GPG public key block'); return; }
   if (!isGpg && !pubKeyNative) { showErr('contact-err', 'Paste the SPKI base64 public key'); return; }
 
-  const payload = { handle, platform, displayName };
+  const payload = { handle, platform: site, displayName };
   if (isGpg) {
     payload.publicArmor = pubKeyGpg;
   } else {
@@ -354,7 +318,7 @@ async function renderContacts() {
       <div class="avatar">${initials(c.displayName || c.handle)}</div>
       <div class="ct-info">
         <div class="ct-name">${esc(c.displayName || c.handle)}</div>
-        <div class="ct-handle">${esc(c.handle)} · ${esc(c.platform)}</div>
+        <div class="ct-handle">${esc(c.handle)}</div>
         ${c.uid ? `<div class="ct-uid">${esc(c.uid)}</div>` : ''}
         ${c.fingerprint ? `<div class="ct-fp">${fmtFp(c.fingerprint)}</div>` : ''}
         <div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${chips}</div>
@@ -382,14 +346,14 @@ async function renderContacts() {
   // (it uses their public key so they can be added to someone else's CryptoChat)
   list.querySelectorAll('.share-contact-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const { handle, platform, pubkey, fp, name } = btn.dataset;
+      const { handle, pubkey, fp, name } = btn.dataset;
       if (!pubkey) {
         alert('This contact has no usable public key to share.'); return;
       }
       const parts = [
         'v1',
         encodeURIComponent(handle),
-        encodeURIComponent(platform),
+        encodeURIComponent('web'),
         encodeURIComponent(pubkey),
         encodeURIComponent(name),
         encodeURIComponent(fp),
@@ -444,11 +408,11 @@ async function initKeys() {
   // ── Share link generation ──────────────────────────────────────────
   const SHARE_BASE = 'https://retiredroca.github.io/CryptoChat/#v1';
 
-  function buildShareLink(handle, platform, pubKeyB64, displayName, fingerprint) {
+  function buildShareLink(handle, pubKeyB64, displayName, fingerprint) {
     const parts = [
       'v1',
       encodeURIComponent(handle),
-      encodeURIComponent(platform),
+      encodeURIComponent('web'),
       encodeURIComponent(pubKeyB64),
       encodeURIComponent(displayName || handle),
       encodeURIComponent(fingerprint || ''),
@@ -458,7 +422,6 @@ async function initKeys() {
 
   $('btn-gen-link').addEventListener('click', async () => {
     const handle      = $('share-handle').value.trim();
-    const platform    = $('share-platform').value;
     const displayName = $('share-displayname').value.trim();
 
     $('share-err').classList.add('hidden');
@@ -468,7 +431,7 @@ async function initKeys() {
     const keyData = await msg('GET_PUBLIC_KEY');
     if (!keyData.publicKeyB64) { showErr('share-err', 'No keypair found — check My Keys tab'); return; }
 
-    const link = buildShareLink(handle, platform, keyData.publicKeyB64, displayName, keyData.fingerprint);
+    const link = buildShareLink(handle, keyData.publicKeyB64, displayName, keyData.fingerprint);
 
     $('share-link-text').textContent = link;
     $('share-result').classList.remove('hidden');
@@ -664,7 +627,6 @@ async function initBackup() {
 ═══════════════════════════════════════════════════════════════ */
 
 (async () => {
-  await detectPlatform();
   await initCompose();
   await initContacts();
   await initKeys();

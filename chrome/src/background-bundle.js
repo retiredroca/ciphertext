@@ -1027,20 +1027,13 @@ globalThis.CCEngine = {
     }
   }
 
-  // Broadcast to all supported-platform tabs so content scripts re-scan
+  // Broadcast to all tabs so content scripts re-scan for newly decryptable messages
   function broadcastContactsUpdated() {
-    const HOSTS = [
-      'discord.com', 'app.slack.com', 'web.whatsapp.com', 'web.telegram.org',
-      'www.instagram.com', 'x.com', 'twitter.com', 'www.facebook.com', 'messenger.com'
-    ];
     chrome.tabs.query({}, tabs => {
       for (const tab of tabs) {
-        try {
-          const url = new URL(tab.url || '');
-          if (HOSTS.some(h => url.hostname.includes(h))) {
-            chrome.tabs.sendMessage(tab.id, { type: 'CONTACTS_UPDATED' }).catch(() => {});
-          }
-        } catch (_) {}
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, { type: 'CONTACTS_UPDATED' }).catch(() => {});
+        }
       }
     });
   }
