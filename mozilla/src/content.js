@@ -270,23 +270,56 @@
     enqueue(el, wire, isGrp);
   }
 
-  const MSG_SELS = [
-    '[class*="messageContent"] span', '[data-slate-string="true"]',
-    '.p-rich_text_section',
-    'span[data-testid="msg-text"] span',
-    '.message .text-content',
-    'div[data-testid="message-text"] span',
-    'div[role="row"] span[dir="auto"]',
-    'div[data-testid="xchatMessageContent"] span',
-    'div[data-testid="messageEntry"] span',
-    'div[data-testid="message-container"] span[dir]',
-  ].join(',');
+  // ── Universal text node scanner ──────────────────────────────────
+  // Walk every text node in the document. If it contains a CryptoChat
+  // wire string, process its parent element. This works on any site
+  // without needing platform-specific CSS selectors.
 
-  const decryptObs = new MutationObserver(() => {
-    try { document.querySelectorAll(MSG_SELS).forEach(processEl); } catch(_) {}
+  const WIRE_ANY = /CRYPTOCHAT(?:_GRP)?_V1:[A-Za-z0-9+/=:]+/;
+
+  function scanTextNodes(root) {
+    const walker = document.createTreeWalker(
+      root || document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          // Skip our own injected elements
+          if (node.parentElement?.closest('[' + HOST_ATTR + ']')) return NodeFilter.FILTER_REJECT;
+          // Skip script/style content
+          const tag = node.parentElement?.tagName;
+          if (tag === 'SCRIPT' || tag === 'STYLE') return NodeFilter.FILTER_REJECT;
+          // Skip contenteditable inputs
+          if (node.parentElement?.closest('[contenteditable="true"]')) return NodeFilter.FILTER_REJECT;
+          // Only accept nodes that contain our wire prefix
+          return node.nodeValue && WIRE_ANY.test(node.nodeValue)
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_SKIP;
+        }
+      }
+    );
+
+    const parents = new Set();
+    let node;
+    while ((node = walker.nextNode())) {
+      if (node.parentElement) parents.add(node.parentElement);
+    }
+    parents.forEach(processEl);
+  }
+
+  const decryptObs = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.type === 'childList') {
+        m.addedNodes.forEach(n => {
+          if (n.nodeType === Node.ELEMENT_NODE) scanTextNodes(n);
+          else if (n.nodeType === Node.TEXT_NODE && WIRE_ANY.test(n.nodeValue || '')) {
+            if (n.parentElement) processEl(n.parentElement);
+          }
+        });
+      }
+    }
   });
   decryptObs.observe(document.body, { childList: true, subtree: true });
-  try { document.querySelectorAll(MSG_SELS).forEach(processEl); } catch(_) {}
+  scanTextNodes();
 
   /* ════════════════════════════════════════════════════════════════════
      SHADOW DOM PANEL CSS
@@ -810,7 +843,7 @@
   chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
     if (msg.type === 'CONTACTS_UPDATED') {
       document.querySelectorAll(`[${PROCESSED}="nk"]`).forEach(el => el.removeAttribute(PROCESSED));
-      try { document.querySelectorAll(MSG_SELS).forEach(processEl); } catch(_) {}
+      scanTextNodes();
       if (ccShadow && panelOpen) loadContactList();
     }
 
