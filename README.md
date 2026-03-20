@@ -1,6 +1,6 @@
 # CryptoChat
 
-> End-to-end encrypted messaging layered on top of Discord, Slack, WhatsApp Web, Telegram Web, Instagram, X/Twitter, and Facebook Messenger — without any of those platforms ever seeing your plaintext.
+> End-to-end encrypted messaging layered on top of any text entry on any site. only your recipients can read.
 
 Works in **Chrome, Brave, Edge, and Firefox**. No accounts, no servers, no dependencies. All crypto runs in your browser using the native Web Crypto API.
 
@@ -25,22 +25,6 @@ Click → decrypted locally in their browser → plaintext shown inline
 Keys are generated in the browser and stored in `storage.local` . They never leave your device.
 
 ![how it works](https://github.com/retiredroca/CryptoChat/blob/main/validation-testing.gif?raw=true)
----
-
-## Supported platforms
-
-| Platform | Interface | Notes |
-|---|---|---|
-| Discord | Slate.js editor | `discord.com` |
-| Slack | Quill editor | `app.slack.com` |
-| WhatsApp Web | contenteditable | `web.whatsapp.com` |
-| Telegram Web | contenteditable | `web.telegram.org` |
-| Instagram DMs | Lexical editor | `instagram.com/direct` |
-| X / Twitter DMs | React contenteditable | `x.com/messages` + XChat (`x.com/i/chat`) |
-| Facebook Messenger | Draft.js editor | `facebook.com/messages` + `messenger.com`* |
-
-\* messenger.com redirects to facebook.com/messages from April 2026 — the extension covers both.
-
 ---
 
 ## Crypto
@@ -89,13 +73,6 @@ cryptochat-extension/
     ├── background-loader.js    # Classic script entry point — calls importScripts()
     ├── background-bundle.js    # ★ Self-contained bundle: engine + keystore + handler
     ├── content.js              # Injected into all supported platforms
-    ├── adapters/
-    │   ├── discord.js          # Discord selector reference + DOM notes
-    │   ├── slack.js            # Slack selector reference
-    │   ├── others.js           # WhatsApp Web + Telegram Web
-    │   ├── instagram.js        # Instagram (Lexical editor)
-    │   ├── twitter.js          # X/Twitter (legacy DMs + XChat)
-    │   └── facebook.js         # Facebook Messenger (Draft.js)
     ├── crypto/
     │   ├── engine.js           # ES module source: ECDH, AES-GCM, group crypto, GPG parser
     │   └── keystore.js         # ES module source: identity + contact persistence
