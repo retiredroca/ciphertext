@@ -272,25 +272,3 @@ PRs welcome. The most useful contributions right now:
 - Security review of the crypto implementation
 
 When adding a new platform: create `src/adapters/<platform>.js` documenting the DOM structure, add selectors to `INPUT_SELECTORS` and `MESSAGE_SELECTORS` in `src/content.js`, add the hostname to both manifests, and add the platform to the popup dropdown and settings grid.
-
----
-
-## License
-
-Copyright (C) 2026 Ric
-
-This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-### What this means in practice
-
-- ✅ You can use, study, and modify this software freely
-- ✅ You can distribute copies of it
-- ✅ You can distribute modified versions — but you must release your modifications under AGPL v3 as well
-- ✅ If you run a modified version as a network service, you must make your modified source available to users of that service
-- ❌ You cannot take this code, make proprietary changes, and distribute it without releasing those changes
-
-The AGPL's network use clause means that companies can't fork CryptoChat, add features, and deploy it as a paid SaaS product without open-sourcing their version. If you build on CryptoChat, your improvements belong to the community too.
