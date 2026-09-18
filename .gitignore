@@ -1,4 +1,5 @@
 oc.sh
+.vscode/
 node_modules/
 dist/
 chrome/dist/
