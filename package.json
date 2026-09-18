@@ -15,7 +15,8 @@
     "lint:firefox": "web-ext lint --source-dir mozilla",
     "run:librewolf": "node scripts/run-firefox.js",
     "test": "node --test test/crypto.test.js test/handler.test.js",
-    "test:e2e": "node --test test/e2e/"
+    "test:e2e": "node --test test/e2e/",
+    "test:screenshots": "node test/e2e/screenshot.js"
   },
   "devDependencies": {
     "archiver": "^7.0.1",

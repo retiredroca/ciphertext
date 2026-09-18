@@ -5,11 +5,10 @@
  *   npm run build:firefox   # produce mozilla/dist/cryptochat-firefox.xpi
  *   npm run test:e2e        # launches LibreWolf, installs a test build
  *
- * Firefox/Marionette refuses WebDriver navigation to moz-extension:// URLs,
- * so this drives the content-script path instead: it installs a copy of the
- * extension whose manifest also matches a local fixture page, then asserts the
- * input overlay appears, the shadow-DOM panel opens, and the background
- * responds to LIST_CONTACTS (the panel shows an empty contact list).
+ * Drives the content-script path: installs a copy of the extension whose
+ * manifest also matches a local fixture page, then asserts the input overlay
+ * appears, the Shadow DOM panel opens, and the background responds to
+ * LIST_CONTACTS (the panel shows an empty contact list).
  *
  * Env:
  *   LIBREWOLF_PATH, GECKODRIVER_PATH  override binaries
@@ -19,82 +18,25 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import http from 'node:http';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { Builder } from 'selenium-webdriver';
-import firefox from 'selenium-webdriver/firefox.js';
-import { resolveLibreWolf, resolveGeckodriver } from '../../scripts/lib/librewolf.js';
-
-const ROOT   = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const TMP    = path.join(ROOT, 'test', 'e2e', '.tmp-addon');
-const TEST_HOST = 'http://127.0.0.1/*';
+import * as H from './lib/harness.js';
 
 let driver, server, baseUrl;
 
-/** Copy mozilla/ and widen the match patterns to include a localhost fixture. */
-function prepareTestAddon() {
-  fs.rmSync(TMP, { recursive: true, force: true });
-  fs.cpSync(path.join(ROOT, 'mozilla'), TMP, {
-    recursive: true,
-    filter: p => !p.includes(`${path.sep}dist`),
-  });
-  const manifestFile = path.join(TMP, 'manifest.json');
-  const m = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
-  m.host_permissions = [...new Set([...(m.host_permissions || []), TEST_HOST])];
-  for (const cs of m.content_scripts || []) {
-    cs.matches = [...new Set([...cs.matches, TEST_HOST])];
-  }
-  fs.writeFileSync(manifestFile, JSON.stringify(m, null, 2));
-}
-
-function startServer() {
-  return new Promise(resolve => {
-    server = http.createServer((_req, res) => {
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(`<!doctype html><html><head><meta charset="utf-8"><title>CC E2E</title></head>
-<body><h1>composer</h1>
-<textarea id="composer" style="width:420px;height:90px"></textarea>
-</body></html>`);
-    });
-    server.listen(0, '127.0.0.1', () => {
-      baseUrl = `http://127.0.0.1:${server.address().port}/`;
-      resolve(baseUrl);
-    });
-  });
-}
-
 before(async () => {
-  const bin = resolveLibreWolf();
-  assert.ok(bin, 'LibreWolf not found — set LIBREWOLF_PATH to librewolf(.exe)');
-
-  prepareTestAddon();
-  await startServer();
-
-  const options = new firefox.Options().setBinary(bin);
-  if (process.env.CC_E2E_HEADLESS === '1') options.addArguments('-headless');
-
-  let builder = new Builder().forBrowser('firefox').setFirefoxOptions(options);
-  const gd = resolveGeckodriver();
-  if (gd) builder = builder.setFirefoxService(new firefox.ServiceBuilder(gd));
-  driver = await builder.build();
-  await driver.manage().setTimeouts({ implicit: 5000, pageLoad: 30000, script: 15000 });
-
-  await driver.installAddon(TMP, true);
+  H.prepareTestAddon();
+  ({ server, baseUrl } = await H.startServer());
+  driver = await H.launchWithAddon({ headless: process.env.CC_E2E_HEADLESS === '1' });
 });
 
 after(async () => {
   if (driver) { try { await driver.quit(); } catch (_) {} }
   if (server) server.close();
-  fs.rmSync(TMP, { recursive: true, force: true });
+  fs.rmSync(H.TMP, { recursive: true, force: true });
 });
 
 test('lock overlay is injected onto a detected input box', async () => {
   await driver.get(baseUrl);
-  const btn = await driver.wait(async () => {
-    const els = await driver.findElements({ css: 'button[data-cc-host="input"]' });
-    return els.length ? els[0] : false;
-  }, 15000, 'overlay button should be injected');
+  const btn = await H.waitForOverlay(driver);
   assert.ok(await btn.isDisplayed(), 'overlay button is visible');
 });
 
