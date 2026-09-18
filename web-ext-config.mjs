@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * web-ext configuration (used by `npm run lint:firefox` and `run:librewolf`).
- *
- * `docs/` holds the GitHub Pages landing page and is intentionally not part
- * of the extension runtime, so it is excluded from lint/package.
+ * web-ext configuration (used by `npm run lint:firefox` and `run:librewof`).
+ * The GitHub Pages landing page lives at the repo root, outside the package,
+ * so only build output is ignored here.
  */
 export default {
   sourceDir: 'mozilla',
-  ignoreFiles: ['docs/**', 'dist/**'],
+  ignoreFiles: ['dist/**'],
 };

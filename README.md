@@ -133,10 +133,10 @@ To build a classical-only (V1) package, delete `src/vendor/mlkem768.js`; `backgr
 ```
 cryptochat-extension/
 ├── package.json                 # dev tooling (esbuild, archiver, mlkem) — no runtime deps
+├── index.html                   # GitHub Pages landing page (served from repo root)
 ├── chrome/                      # Chrome / Brave / Edge package (MV3, service_worker)
 │   ├── manifest.json
 │   ├── build.js                 # pack chrome/dist/cryptochat-chrome.zip
-│   ├── docs/index.html          # GitHub Pages landing page
 │   └── src/
 │       ├── background-loader.js # importScripts() entry (vendor stub + bundle)
 │       ├── background-bundle.js # ★ GENERATED — engine + keystore + handler

@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC  = path.join(ROOT, 'chrome');
 const DST  = path.join(ROOT, 'mozilla');
-const SHARED = ['src', 'icons', 'docs'];
+const SHARED = ['src', 'icons'];
 
 export function sync({ quiet = false } = {}) {
   let count = 0;
