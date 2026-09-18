@@ -9,6 +9,9 @@ build. The following packages are used at build time or in optional bundles.
 | [`mlkem`](https://www.npmjs.com/package/mlkem) | MIT | Optional ML-KEM-768 bundle (`npm run build:pqc`) — enables hybrid V2 mode |
 | [`esbuild`](https://www.npmjs.com/package/esbuild) | MIT | Build tooling (bundling the background and PQC bundle) |
 | [`archiver`](https://www.npmjs.com/package/archiver) | MIT | Build tooling (packaging `.zip` / `.xpi`) |
+| [`web-ext`](https://www.npmjs.com/package/web-ext) | MPL-2.0 | Dev tooling (`npm run lint:firefox`, `run:librewolf`) |
+| [`selenium-webdriver`](https://www.npmjs.com/package/selenium-webdriver) | Apache-2.0 | Dev tooling (`npm run test:e2e`) |
+| [geckodriver](https://github.com/mozilla/geckodriver) | MPL-2.0 | Dev tooling (WebDriver bridge for LibreWolf/Firefox; installed separately) |
 
 ## Planned / not currently bundled
 

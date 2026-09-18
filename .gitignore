@@ -3,4 +3,5 @@ node_modules/
 dist/
 chrome/dist/
 mozilla/dist/
+test/e2e/.tmp-addon/
 *.log

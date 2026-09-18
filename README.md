@@ -2,7 +2,7 @@
 
 > End-to-end encrypted messaging layered on top of the sites you already use — Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger — without any of those platforms ever seeing your plaintext.
 
-Works in **Chrome, Brave, Edge, and Firefox**. No accounts, no servers. All cryptography runs in your browser using the native Web Crypto API.
+Works in **Chrome, Brave, Edge, Firefox, and LibreWolf**. No accounts, no servers. All cryptography runs in your browser using the native Web Crypto API.
 
 ---
 
@@ -98,17 +98,19 @@ In the classical group format, `slotsJson` is `[{ h: handle, p: recipientPubKeyB
 
 In the hybrid formats, each slot carries the recipient's ECDH key, an ML-KEM ciphertext, and the wrapped DEK. The hybrid key is `HKDF-SHA256(ECDH_secret || ML-KEM_secret)`, with both public keys and the ML-KEM ciphertext bound into the KDF context. An attacker must break **both** ECDH and ML-KEM to recover a message.
 
-### Enabling post-quantum mode
+### Post-quantum mode
 
-The source tree ships with a stub, so the default build is classical (V1). To enable the hybrid V2 path:
+This repository ships the generated ML-KEM-768 bundle (`src/vendor/mlkem768.js`), so hybrid V2 is **enabled by default**. New identities automatically get an ML-KEM-768 key, and messages upgrade to V2 whenever both parties advertise one. Existing V1 messages keep working.
+
+To regenerate the bundle (for example after updating the `mlkem` package):
 
 ```bash
 npm install
-npm run build:pqc     # bundles mlkem into src/vendor/mlkem768.js
+npm run build:pqc     # rebundles mlkem into src/vendor/mlkem768.js
 npm run build         # rebuild both packages
 ```
 
-Once the bundle is present, new identities automatically get an ML-KEM-768 key, and messages are upgraded to V2 whenever both parties advertise one. Existing V1 messages keep working.
+To build a classical-only (V1) package, delete `src/vendor/mlkem768.js`; `background-loader.js` falls back to the stub automatically.
 
 ---
 
@@ -130,11 +132,14 @@ cryptochat-extension/
 │       │   └── keystore.js      # identity + contact persistence
 │       ├── adapters/            # per-site input/send/message selectors
 │       ├── content.js           # input detection, overlay UI, feed decryption
-│       ├── vendor/              # mlkem stub (or built bundle)
+│       ├── vendor/              # mlkem768.js (ML-KEM-768 bundle) + stub fallback
 │       └── ui/                  # popup.html / popup.css / popup.js
-├── mozilla/                     # Firefox package (identical runtime; scripts[] manifest)
-├── scripts/                     # bundle / sync / pack / PQC build scripts
-└── test/                        # Node crypto round-trip tests
+├── mozilla/                     # Firefox / LibreWolf package (identical runtime; scripts[] manifest)
+├── scripts/                     # bundle / sync / pack / PQC build + LibreWolf helpers
+├── test/                        # Node crypto round-trip + handler tests
+│   └── e2e/                     # Selenium smoke test (launches LibreWolf)
+├── web-ext-config.mjs           # web-ext lint/run config
+└── THIRD_PARTY_LICENSES.md
 ```
 
 Both browser directories are independently loadable. Their runtime code is identical — only `manifest.json` differs. `mozilla/build.js` syncs the shared runtime from `chrome/` before packing so the two can never drift.
@@ -160,30 +165,56 @@ npm run build          # bundles + packs both browsers
 2. Enable **Developer mode**
 3. **Load unpacked** → select the `chrome/` folder
 
-### Firefox (temporary)
+### Firefox / LibreWolf (temporary)
 
-1. Open `about:debugging` → **This Firefox**
+1. Open `about:debugging` → **This Firefox** (or **This LibreWolf**)
 2. **Load Temporary Add-on…** → select `mozilla/manifest.json`
 
-### Firefox (persistent)
+### Firefox / LibreWolf (persistent)
 
-Build the `.xpi` and either drag it onto Firefox Developer Edition (`xpinstall.signatures.required = false`) or sign it for free via [addons.mozilla.org](https://addons.mozilla.org) ("On your own", unlisted).
+Build the `.xpi` and either drag it onto a build with signature enforcement disabled (`xpinstall.signatures.required = false`) or sign it for free via [addons.mozilla.org](https://addons.mozilla.org) ("On your own", unlisted).
 
 ```bash
 npm run build:firefox
 # → mozilla/dist/cryptochat-firefox.xpi
 ```
 
-### Build commands
+### Build & test commands
 
 ```bash
 npm run bundle         # regenerate background-bundle.js from source modules
 npm run build:chrome   # chrome/dist/cryptochat-chrome.zip
 npm run build:firefox  # sync chrome → mozilla, then mozilla/dist/cryptochat-firefox.xpi
 npm run build          # both
-npm run build:pqc      # enable ML-KEM-768 hybrid mode
-npm test               # crypto round-trip + handler tests (Node)
+npm run build:pqc      # regenerate the ML-KEM-768 hybrid bundle
+npm test               # crypto round-trip + handler unit tests (Node)
+npm run test:e2e       # Selenium smoke test in LibreWolf
+npm run lint:firefox   # web-ext lint against AMO rules
+npm run run:librewolf  # launch LibreWolf with the extension loaded (hot reload)
 ```
+
+### Testing
+
+- **Unit tests** (`npm test`) run the real crypto engine and background handler under
+  Node's WebCrypto + the `mlkem` package: V1 and V2 (hybrid) 1:1 and group round
+  trips, tamper rejection, GPG fingerprints, contact CRUD, and the encrypted
+  backup export/import (including ML-KEM key preservation). No browser required.
+- **End-to-end** (`npm run test:e2e`) drives LibreWolf through geckodriver and
+  Selenium. It installs a test copy of the extension whose manifest also matches a
+  local fixture page, then asserts the input overlay is injected, the Shadow DOM
+  panel opens, and the background responds. Firefox/Marionette blocks WebDriver
+  navigation to `moz-extension://` pages, so the popup itself is covered by the
+  unit tests plus manual checks.
+- **Browser resolution:** `scripts/lib/librewolf.js` finds LibreWolf at the usual
+  install paths; override with `LIBREWOLF_PATH`, and `GECKODRIVER_PATH` for
+  geckodriver. Set `CC_E2E_HEADLESS=1` for headless.
+
+  ```bash
+  scoop install nodejs geckodriver   # Windows
+  npm install
+  npm run build:firefox
+  npm run test:e2e
+  ```
 
 ---
 

@@ -12,11 +12,16 @@
     "build": "npm run bundle && node chrome/build.js && node mozilla/build.js",
     "build:pqc": "node scripts/build-pqc.js",
     "sync:firefox": "node scripts/sync-firefox.js",
-    "test": "node --test test/"
+    "lint:firefox": "web-ext lint --source-dir mozilla",
+    "run:librewolf": "node scripts/run-firefox.js",
+    "test": "node --test test/crypto.test.js test/handler.test.js",
+    "test:e2e": "node --test test/e2e/"
   },
   "devDependencies": {
     "archiver": "^7.0.1",
     "esbuild": "^0.25.0",
-    "mlkem": "^2.0.0"
+    "mlkem": "^2.0.0",
+    "selenium-webdriver": "^4.49.0",
+    "web-ext": "^10.6.0"
   }
 }
