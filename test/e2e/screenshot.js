@@ -7,6 +7,7 @@
  *   npm run test:screenshots
  *
  * Output: assets/screenshots/*.png  (override with CC_SHOT_DIR)
+ * Images are capped at 1280x800.
  * Env:    CC_E2E_HEADED=1 to watch the browser, LIBREWOLF_PATH/GECKODRIVER_PATH
  */
 
@@ -15,6 +16,7 @@ import path from 'node:path';
 import * as H from './lib/harness.js';
 
 const OUT = process.env.CC_SHOT_DIR || path.join(H.ROOT, 'assets', 'screenshots');
+const MAX_W = 1280, MAX_H = 800;
 
 async function shot(driver, name) {
   const b64 = await driver.takeScreenshot();
@@ -37,6 +39,8 @@ async function panelReady(driver) {
   const driver = await H.launchWithAddon({ headless: process.env.CC_E2E_HEADED !== '1' });
 
   try {
+    // Cap the capture so screenshots stay within 1280x800 for the README/Pages.
+    await driver.manage().window().setRect({ width: MAX_W, height: MAX_H });
     await driver.get(baseUrl);
 
     const btn = await H.waitForOverlay(driver);
