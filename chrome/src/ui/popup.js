@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * CryptoChat Popup v2
  * Handles: 1:1 compose, group compose, GPG key import, contacts CRUD, key display
@@ -11,7 +12,9 @@ const $ = id => document.getElementById(id);
 const msg = (type, extra = {}) => chrome.runtime.sendMessage({ type, ...extra });
 
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function initials(name) {
   return name.trim().split(/\s+/).map(w => w[0] ?? '?').join('').toUpperCase().slice(0, 2);
@@ -250,13 +253,24 @@ async function previewGpgKey() {
   out.textContent = 'Parsing…';
   out.classList.remove('hidden');
 
-  // We can't call background directly from popup for parse-only,
-  // but we can ask background to SAVE_CONTACT with publicArmor and it'll parse.
-  // For a preview, mimic the parse by asking background with a temp save + delete.
-  // Actually simpler: just show a "will be parsed on save" note here.
-  // Real parse happens in SAVE_CONTACT handler in background.
-  out.className = 'gpg-parse-result gpg-ok';
-  out.innerHTML = '✓ Looks like a PGP armor block — will parse on save.<br>Supports: ECC P-256/P-384/P-521 (native), RSA (stored).';
+  const r = await msg('PARSE_GPG_KEY', { armor });
+  const parsed = r?.result || {};
+
+  if (parsed.type === 'ecdh') {
+    out.className = 'gpg-parse-result gpg-ok';
+    out.innerHTML =
+      `✓ ${esc(parsed.curve)} key importable natively.` +
+      (parsed.uid ? `<br>UID: ${esc(parsed.uid)}` : '') +
+      (parsed.fingerprint ? `<br>Fingerprint: ${esc(fmtFp(parsed.fingerprint))}` : '');
+  } else if (parsed.type === 'rsa') {
+    out.className = 'gpg-parse-result gpg-warn';
+    out.innerHTML =
+      `⚠ RSA key will be stored but can't encrypt yet (openpgp.js bridge on the roadmap).` +
+      (parsed.uid ? `<br>UID: ${esc(parsed.uid)}` : '');
+  } else {
+    out.className = 'gpg-parse-result gpg-warn';
+    out.textContent = '⚠ ' + (parsed.error || 'Unrecognized key');
+  }
 }
 
 async function saveContactAction() {
@@ -310,8 +324,9 @@ async function renderContacts() {
 
     let chips = '';
     if (c.verified) chips += '<span class="chip chip-ok">Verified</span>';
-    if (c.source === 'gpg' && c.type !== 'rsa') chips += '<span class="chip chip-gpg">GPG ECC</span>';
-    if (c.source === 'gpg' && c.type === 'rsa') chips += '<span class="chip chip-rsa">GPG RSA</span>';
+    if (c.source === 'gpg' && c.publicKeyB64)  chips += '<span class="chip chip-gpg">GPG ECC</span>';
+    if (c.source === 'gpg' && !c.publicKeyB64) chips += '<span class="chip chip-rsa">GPG RSA</span>';
+    if (c.mlkemPkB64) chips += '<span class="chip chip-ok">PQC</span>';
     if (!c.publicKeyB64) chips += '<span class="chip chip-warn">No usable key</span>';
 
     card.innerHTML = `
@@ -646,6 +661,106 @@ async function initBackup() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════════════════ */
+
+const PLATFORM_MATCHES = [
+  'https://discord.com/*',
+  'https://*.slack.com/*',
+  'https://web.whatsapp.com/*',
+  'https://web.telegram.org/*',
+  'https://www.instagram.com/*',
+  'https://x.com/*',
+  'https://twitter.com/*',
+  'https://www.facebook.com/*',
+  'https://www.messenger.com/*',
+  'https://retiredroca.github.io/*',
+];
+const GENERIC_SCRIPT_ID = 'cc-generic';
+
+async function allSitesEnabled() {
+  try {
+    const has = await chrome.permissions.contains({ origins: ['<all_urls>'] });
+    if (!has) return false;
+    const scripts = await chrome.scripting.getRegisteredContentScripts({ ids: [GENERIC_SCRIPT_ID] });
+    return scripts.length > 0;
+  } catch (_) { return false; }
+}
+
+async function registerGenericScript(withPersistence) {
+  const cfg = {
+    id: GENERIC_SCRIPT_ID,
+    matches: ['<all_urls>'],
+    excludeMatches: PLATFORM_MATCHES,
+    js: ['src/content.js'],
+    runAt: 'document_idle',
+  };
+  if (withPersistence) cfg.persistAcrossSessions = true;
+  await chrome.scripting.registerContentScripts([cfg]);
+}
+
+async function enableAllSites() {
+  let granted = false;
+  try {
+    granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
+  } catch (_) { return false; }
+  if (!granted) return false;
+  try {
+    await registerGenericScript(true);
+  } catch (_) {
+    // Already registered, or persistAcrossSessions unsupported (Firefox).
+    try { await registerGenericScript(false); } catch (__) {}
+  }
+  return true;
+}
+
+async function disableAllSites() {
+  try { await chrome.scripting.unregisterContentScripts({ ids: [GENERIC_SCRIPT_ID] }); } catch (_) {}
+  try { await chrome.permissions.remove({ origins: ['<all_urls>'] }); } catch (_) {}
+}
+
+function updateAllSitesNote(on, extra) {
+  const el = $('allsites-note');
+  if (!el) return;
+  el.textContent = extra || (on
+    ? 'Active on any site with a text input.'
+    : 'Only the seven supported platforms are active.');
+}
+
+async function savePref(key, value) {
+  await msg('SET_PREFS', { prefs: { [key]: value } });
+}
+
+async function initSettings() {
+  const { prefs } = await msg('GET_PREFS');
+  $('pref-blur').checked    = prefs.blur    !== false;
+  $('pref-overlay').checked = prefs.overlay !== false;
+
+  const on = await allSitesEnabled();
+  $('pref-allsites').checked = on;
+  updateAllSitesNote(on);
+
+  $('pref-blur').addEventListener('change',    () => savePref('blur',    $('pref-blur').checked));
+  $('pref-overlay').addEventListener('change', () => savePref('overlay', $('pref-overlay').checked));
+
+  $('pref-allsites').addEventListener('change', async () => {
+    const want = $('pref-allsites').checked;
+    if (want) {
+      const ok = await enableAllSites();
+      if (!ok) {
+        $('pref-allsites').checked = false;
+        updateAllSitesNote(false, 'Permission denied — still limited to supported platforms.');
+        return;
+      }
+    } else {
+      await disableAllSites();
+    }
+    await savePref('allSites', want);
+    updateAllSitesNote(want);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
    BOOT
 ═══════════════════════════════════════════════════════════════ */
 
@@ -654,4 +769,5 @@ async function initBackup() {
   await initContacts();
   await initKeys();
   await initBackup();
+  await initSettings();
 })();

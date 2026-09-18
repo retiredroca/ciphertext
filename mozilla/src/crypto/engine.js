@@ -1,20 +1,24 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * CryptoChat — Crypto Engine
- * Readable ES module source. The running version of this code is inlined
- * into background-bundle.js as a self-contained IIFE (required for Firefox
- * MV3 service workers which do not support ES module imports).
+ *
+ * This is the runtime source of truth. `src/background-bundle.js` is
+ * generated from this file (via `npm run bundle`) and inlined into a single
+ * classic IIFE so it runs in both Chrome and Firefox MV3 service workers.
  *
  * Key exchange:  ECDH P-256
  * Message enc:   AES-256-GCM  (random 96-bit IV per message)
  * Group enc:     AES-256-GCM body + AES-KW per-recipient DEK slots
- * GPG parsing:   RFC 4880 OpenPGP packet parser for ECC public keys
+ * Hybrid (PQC):  ECDH P-256 + ML-KEM-768 → HKDF-SHA256 → AES-256-GCM
+ * GPG parsing:   RFC 4880 / RFC 6637 / RFC 9580 OpenPGP public keys
  *
- * 1:1 wire format:
+ * 1:1 wire formats:
  *   CRYPTOCHAT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
+ *   CRYPTOCHAT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
  *
- * Group wire format:
+ * Group wire formats:
  *   CRYPTOCHAT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
- *   slots JSON: [{ h: handle, p: pubKeyB64, dek: b64_wrappedDEK }, ...]
+ *   CRYPTOCHAT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
  */
 
 /* ── Encoding helpers ──────────────────────────────────────────────── */
@@ -83,19 +87,56 @@ export async function deriveSharedKey(ourPrivateKey, theirPublicKey) {
   );
 }
 
+export async function deriveEcdhBits(ourPrivateKey, theirPublicKey) {
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'ECDH', public: theirPublicKey },
+    ourPrivateKey,
+    256
+  );
+  return new Uint8Array(bits);
+}
+
 export async function keyFingerprint(publicKeyB64) {
   return buf2hex(await crypto.subtle.digest('SHA-256', b642buf(publicKeyB64)));
 }
 
-/* ── 1:1 encrypt / decrypt ─────────────────────────────────────────── */
+/* ── HKDF helpers ──────────────────────────────────────────────────── */
+//
+// We derive raw key material with HKDF, then import it as the required
+// AES key type. Deriving an extractable CryptoKey here would be a mistake
+// (the previous implementation derived a non-extractable AES-GCM key and
+// then tried to exportKey() it for AES-KW, which throws).
 
-const WIRE_V1_PREFIX = 'CRYPTOCHAT_V1';
-const WIRE_V1_REGEX  = /^CRYPTOCHAT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+async function hkdfBits(ikm, info, lengthBytes = 32) {
+  const baseKey = await crypto.subtle.importKey(
+    'raw', ikm, 'HKDF', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: str2buf(info) },
+    baseKey,
+    lengthBytes * 8
+  );
+  return new Uint8Array(bits);
+}
+
+export async function hkdfAesGcmKey(ikm, info, usage = ['encrypt', 'decrypt']) {
+  const raw = await hkdfBits(ikm, info);
+  return crypto.subtle.importKey('raw', raw, ALGO_AES, false, usage);
+}
+
+export async function hkdfAesKwKey(ikm, info, usage = ['wrapKey', 'unwrapKey']) {
+  const raw = await hkdfBits(ikm, info);
+  return crypto.subtle.importKey('raw', raw, ALGO_WRAP, false, usage);
+}
+
+/* ── 1:1 encrypt / decrypt (classical V1) ──────────────────────────── */
+
+const WIRE_V1_REGEX = /^CRYPTOCHAT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
 
 export async function encryptMessage(plaintext, sharedKey, senderPubKeyB64) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sharedKey, str2buf(plaintext));
-  return [WIRE_V1_PREFIX, buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(':');
+  return ['CRYPTOCHAT_V1', buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(':');
 }
 
 export async function decryptMessage(wireText, sharedKey) {
@@ -114,27 +155,21 @@ export function isV1Message(text) {
   return typeof text === 'string' && WIRE_V1_REGEX.test(text.trim());
 }
 
-/* ── Group encrypt / decrypt ───────────────────────────────────────── */
+/* ── Group encrypt / decrypt (classical V1) ────────────────────────── */
 //
 // Strategy: generate a random Data Encryption Key (DEK) for each message.
 // Encrypt the body once with the DEK. For each recipient, derive an
 // ECDH-based AES-KW wrapping key and wrap the DEK into a per-recipient slot.
-// Any recipient unwraps their slot to recover the DEK and decrypt the body.
 
-const WIRE_GRP_PREFIX = 'CRYPTOCHAT_GRP_V1';
-const WIRE_GRP_REGEX  = /^CRYPTOCHAT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_GRP_REGEX = /^CRYPTOCHAT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
 
 export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPrivateKey, recipients) {
-  // 1. Random DEK for this message
   const dek = await crypto.subtle.generateKey(
     { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
   );
-
-  // 2. Encrypt body
   const iv   = crypto.getRandomValues(new Uint8Array(12));
   const body = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, dek, str2buf(plaintext));
 
-  // 3. Wrap DEK for each recipient
   const slots = [];
   for (const r of recipients) {
     try {
@@ -154,7 +189,7 @@ export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPriv
   const msgId    = buf2b64(msgIdBuf.slice(0, 8));
   const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
 
-  return [WIRE_GRP_PREFIX, msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(':');
+  return ['CRYPTOCHAT_GRP_V1', msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(':');
 }
 
 export async function decryptGroupMessage(wireText, ourPubKeyB64, ourPrivateKey, senderPubKeyB64) {
@@ -189,9 +224,226 @@ export function isGroupMessage(text) {
   return typeof text === 'string' && WIRE_GRP_REGEX.test(text.trim());
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   HYBRID PQC — ECDH P-256 + ML-KEM-768
+   ──────────────────────────────────────────────────────────────────────
+   Key agreement:
+     1. ECDH P-256  → ecdhSecret (32 bytes)
+     2. ML-KEM-768  → mlkemSecret (32 bytes)
+     3. HKDF-SHA256(ecdhSecret || mlkemSecret, info = label|senderPub|recipPub|mlkemCt)
+          → AES-256-GCM (body) / AES-KW (group DEK wrap)
+
+   Both public keys and the ML-KEM ciphertext are bound into the KDF info,
+   so a message is cryptographically tied to the exact key pair and
+   encapsulation it was produced with.
+
+   PQC is enabled when globalThis.MLKEM768 is set (real bundle loaded).
+   When only the stub is present (MLKEM768 === null), V2 is unavailable and
+   the extension falls back to V1.
+   ══════════════════════════════════════════════════════════════════════ */
+
+const WIRE_V2_REGEX = /^CRYPTOCHAT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_GRP2_REGEX = /^CRYPTOCHAT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+
+const V2_INFO = 'CryptoChat-V2';
+
+export function isPqcAvailable() {
+  return !!(globalThis.MLKEM768?.MlKem768);
+}
+
+function requirePqc() {
+  if (!isPqcAvailable()) throw new Error('ML-KEM bundle not loaded');
+  return new globalThis.MLKEM768.MlKem768();
+}
+
+/**
+ * Generate an ML-KEM-768 keypair.
+ * Returns { mlkemPk: Uint8Array(1184), mlkemSk: Uint8Array(2400) }
+ */
+export async function mlkemGenerateKeypair() {
+  const kem = requirePqc();
+  const [pk, sk] = await kem.generateKeyPair();
+  return { mlkemPk: pk, mlkemSk: sk };
+}
+
+function combineSecrets(ecdhSecret, mlkemSecret) {
+  const combined = new Uint8Array(ecdhSecret.length + mlkemSecret.length);
+  combined.set(ecdhSecret);
+  combined.set(mlkemSecret, ecdhSecret.length);
+  return combined;
+}
+
+async function v2Info(senderPubB64, recipientPubB64, mlkemCtB64) {
+  // Hash the full context so it fits within HKDF's info limit while still
+  // cryptographically binding both public keys and the ML-KEM ciphertext.
+  const h = await crypto.subtle.digest(
+    'SHA-256',
+    str2buf(`${V2_INFO}|${senderPubB64}|${recipientPubB64}|${mlkemCtB64}`)
+  );
+  return `${V2_INFO}|${buf2hex(h)}`;
+}
+
+/**
+ * Encrypt with V2 hybrid scheme.
+ */
+export async function encryptMessageV2(plaintext, senderEcdhPubB64, senderEcdhPriv, recipientEcdhPubB64, recipientMlkemPk) {
+  const recipientEcdhPub = await importPublicKey(recipientEcdhPubB64);
+  const ecdhSecret = await deriveEcdhBits(senderEcdhPriv, recipientEcdhPub);
+
+  const kem = requirePqc();
+  const [mlkemCt, mlkemSecret] = await kem.encap(recipientMlkemPk);
+  const mlkemCtB64 = buf2b64(mlkemCt.buffer);
+
+  const hybridKey = await hkdfAesGcmKey(
+    combineSecrets(ecdhSecret, mlkemSecret),
+    await v2Info(senderEcdhPubB64, recipientEcdhPubB64, mlkemCtB64)
+  );
+
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const bodyBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, hybridKey, str2buf(plaintext));
+
+  return ['CRYPTOCHAT_V2', buf2b64(iv.buffer), buf2b64(bodyBuf), senderEcdhPubB64, mlkemCtB64].join(':');
+}
+
+/**
+ * Decrypt a V2 hybrid message.
+ *
+ * @param {string}     wireText
+ * @param {CryptoKey}  recipientEcdhPriv
+ * @param {string}     senderEcdhPubB64   — sender's ECDH pub (from contacts)
+ * @param {Uint8Array} recipientMlkemSk
+ * @param {string}     recipientEcdhPubB64 — our ECDH pub, bound into the KDF
+ */
+export async function decryptMessageV2(wireText, recipientEcdhPriv, senderEcdhPubB64, recipientMlkemSk, recipientEcdhPubB64) {
+  const m = wireText.match(WIRE_V2_REGEX);
+  if (!m) throw new Error('Not a valid CryptoChat V2 message');
+  const [, ivB64, bodyB64, embeddedSenderPub, mlkemCtB64] = m;
+
+  const senderPubToUse = senderEcdhPubB64 || embeddedSenderPub;
+  if (!senderPubToUse) throw new Error('No sender key available');
+  const senderEcdhPub = await importPublicKey(senderPubToUse);
+  const ecdhSecret = await deriveEcdhBits(recipientEcdhPriv, senderEcdhPub);
+
+  const mlkemCt = new Uint8Array(b642buf(mlkemCtB64));
+  const kem = requirePqc();
+  const mlkemSecret = await kem.decap(mlkemCt, recipientMlkemSk);
+
+  const hybridKey = await hkdfAesGcmKey(
+    combineSecrets(ecdhSecret, mlkemSecret),
+    await v2Info(senderPubToUse, recipientEcdhPubB64, mlkemCtB64)
+  );
+
+  const plainBuf = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(b642buf(ivB64)) },
+    hybridKey,
+    b642buf(bodyB64)
+  );
+
+  return { plaintext: buf2str(plainBuf), senderEcdhPubB64: senderPubToUse };
+}
+
+export function isV2Message(t) {
+  return typeof t === 'string' && WIRE_V2_REGEX.test(t.trim());
+}
+
+/**
+ * Group V2 — random DEK for the body; each slot wraps the DEK with a
+ * per-recipient hybrid ECDH+ML-KEM key.
+ *
+ * Slot: { h: handle, ecdhPub: recipientPub, mlkemCt, wrappedDek }
+ */
+export async function encryptGroupMessageV2(plaintext, senderEcdhPubB64, senderEcdhPriv, recipients) {
+  const dek = await crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey']
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const bodyBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, dek, str2buf(plaintext));
+
+  const slots = [];
+  for (const r of recipients) {
+    try {
+      const recipientEcdhPub = await importPublicKey(r.ecdhPubB64);
+      const ecdhSecret = await deriveEcdhBits(senderEcdhPriv, recipientEcdhPub);
+
+      const kem = requirePqc();
+      const mlkemPk = new Uint8Array(b642buf(r.mlkemPkB64));
+      const [mlkemCt, mlkemSecret] = await kem.encap(mlkemPk);
+      const mlkemCtB64 = buf2b64(mlkemCt.buffer);
+
+      const wrapKey = await hkdfAesKwKey(
+        combineSecrets(ecdhSecret, mlkemSecret),
+        await v2Info(senderEcdhPubB64, r.ecdhPubB64, mlkemCtB64)
+      );
+
+      const wrappedDek = await crypto.subtle.wrapKey('raw', dek, wrapKey, { name: 'AES-KW' });
+
+      slots.push({
+        h:          r.handle,
+        ecdhPub:    r.ecdhPubB64,
+        mlkemCt:    mlkemCtB64,
+        wrappedDek: buf2b64(wrappedDek),
+      });
+    } catch (e) {
+      console.warn('[CC PQC] skip group recipient', r.handle, e.message);
+    }
+  }
+
+  if (!slots.length) throw new Error('No valid recipients for V2 group message');
+
+  const msgIdBuf = await crypto.subtle.digest('SHA-256', str2buf(buf2b64(bodyBuf) + Date.now()));
+  const msgId = buf2b64(msgIdBuf.slice(0, 8));
+  const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
+
+  return ['CRYPTOCHAT_GRPV2', msgId, buf2b64(iv.buffer), buf2b64(bodyBuf), slotsB64].join(':');
+}
+
+export async function decryptGroupMessageV2WithSender(wireText, ourEcdhPubB64, ourEcdhPriv, ourMlkemSkB64, senderEcdhPubB64) {
+  const m = wireText.match(WIRE_GRP2_REGEX);
+  if (!m) throw new Error('Not a valid V2 group message');
+  const [, , ivB64, bodyB64, slotsB64] = m;
+  const slots = JSON.parse(buf2str(b642buf(slotsB64)));
+
+  const mySlot = slots.find(s => s.ecdhPub === ourEcdhPubB64);
+  if (!mySlot) throw new Error('No slot for your key in this group message');
+
+  const senderEcdhPub = await importPublicKey(senderEcdhPubB64);
+  const ecdhSecret = await deriveEcdhBits(ourEcdhPriv, senderEcdhPub);
+
+  const mlkemCt = new Uint8Array(b642buf(mySlot.mlkemCt));
+  const mlkemSk = new Uint8Array(b642buf(ourMlkemSkB64));
+  const kem = requirePqc();
+  const mlkemSecret = await kem.decap(mlkemCt, mlkemSk);
+
+  const unwrapKey = await hkdfAesKwKey(
+    combineSecrets(ecdhSecret, mlkemSecret),
+    await v2Info(senderEcdhPubB64, ourEcdhPubB64, mySlot.mlkemCt)
+  );
+
+  const dek = await crypto.subtle.unwrapKey(
+    'raw', b642buf(mySlot.wrappedDek), unwrapKey,
+    { name: 'AES-KW' }, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+  );
+
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(b642buf(ivB64)) },
+    dek, b642buf(bodyB64)
+  );
+
+  return {
+    plaintext:        buf2str(plain),
+    slotCount:        slots.length,
+    recipientHandles: slots.map(s => s.h),
+    senderEcdhPubB64,
+  };
+}
+
+export function isV2GroupMessage(t) {
+  return typeof t === 'string' && WIRE_GRP2_REGEX.test(t.trim());
+}
+
 /* ── GPG / OpenPGP public key parser ───────────────────────────────── */
 //
-// Parses ASCII-armored OpenPGP public keys (RFC 4880 + RFC 6637).
+// Parses ASCII-armored OpenPGP public keys (RFC 4880 / RFC 6637 / RFC 9580).
 // ECC P-256/P-384/P-521 keys are bridged to SubtleCrypto natively.
 // Curve25519 and RSA keys are stored but flagged as not yet bridged.
 
@@ -263,6 +515,36 @@ function parsePgpKeyPacket(buf) {
   return { type: 'unsupported', reason: `algo ${algo}` };
 }
 
+/**
+ * True OpenPGP fingerprint of a public-key packet body.
+ *   v4 → SHA-1  over 0x99 || len16 || body   (40 hex chars)
+ *   v5 → SHA-256 over 0x9A || len32 || body  (64 hex chars)
+ */
+export async function openpgpFingerprint(pubBody) {
+  const body = new Uint8Array(pubBody);
+  const ver = body[0];
+  let prefix, hash;
+  if (ver === 5) {
+    hash = 'SHA-256';
+    prefix = new Uint8Array(5);
+    prefix[0] = 0x9a;
+    prefix[1] = (body.length >>> 24) & 0xff;
+    prefix[2] = (body.length >>> 16) & 0xff;
+    prefix[3] = (body.length >>> 8)  & 0xff;
+    prefix[4] = body.length & 0xff;
+  } else {
+    hash = 'SHA-1';
+    prefix = new Uint8Array(3);
+    prefix[0] = 0x99;
+    prefix[1] = (body.length >>> 8) & 0xff;
+    prefix[2] = body.length & 0xff;
+  }
+  const data = new Uint8Array(prefix.length + body.length);
+  data.set(prefix);
+  data.set(body, prefix.length);
+  return buf2hex(await crypto.subtle.digest(hash, data));
+}
+
 export async function parseGpgPublicKey(armored) {
   try {
     const raw   = dearmor(armored);
@@ -298,7 +580,7 @@ export async function parseGpgPublicKey(armored) {
 
     const ki  = parsePgpKeyPacket(pub.body);
     const uid = pkts.find(p => p.tag === 13);
-    const fp  = buf2hex(await crypto.subtle.digest('SHA-256', pub.body));
+    const fp  = await openpgpFingerprint(pub.body);
 
     if (ki.type === 'ecdh') {
       return {

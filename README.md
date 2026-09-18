@@ -1,59 +1,114 @@
 # CryptoChat
 
-> End-to-end encrypted messaging layered on top of any text entry on any site. only recipients within your circle of trust can read.
+> End-to-end encrypted messaging layered on top of the sites you already use — Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger — without any of those platforms ever seeing your plaintext.
 
-Works in **Chrome, Brave, Edge, and Firefox**. No accounts, no servers, no dependencies. All crypto runs in your browser using the native Web Crypto API.
+Works in **Chrome, Brave, Edge, and Firefox**. No accounts, no servers. All cryptography runs in your browser using the native Web Crypto API.
+
+---
+
+## Features
+
+- **One lock button per message box.** When a site is enabled, CryptoChat detects its input boxes and overlays a small lock button directly on them. Click it to compose; the ciphertext is injected into that same box and sent.
+- **1:1 and group encryption.** Classical ECDH + AES-256-GCM, with an optional post-quantum hybrid mode.
+- **Reads inline.** Encrypted messages in any feed are auto-detected and decrypted in place; unknown senders get a click-to-decrypt overlay.
+- **Native + GPG keys.** Import a CryptoChat public key, or a Kleopatra/GnuPG armored ECC key.
+- **Share links.** Generate a link that adds you as a contact in one click.
+- **Encrypted backups.** Move your identity and contacts between browsers with a passphrase-protected `.ccbackup` file.
+- **Optional any-site mode.** Not on the supported list? Grant access and CryptoChat works on any site with a text input.
 
 ---
 
 ## How it works
 
 ```
-You type in the CryptoChat popup
+You click the lock on a message box
         ↓
-Message encrypted locally (AES-256-GCM, ECDH key exchange)
+Message encrypted locally (AES-256-GCM; ECDH, + ML-KEM-768 in hybrid mode)
         ↓
 Ciphertext injected into the platform's message input
         ↓
-You hit send — platform sees and stores only ciphertext
+You hit send — the platform sees and stores only ciphertext
         ↓
-Recipient's feed: [🔒 Encrypted message — click to decrypt]
+Recipient's feed:  [🔒 Encrypted message — click to decrypt]
         ↓
 Click → decrypted locally in their browser → plaintext shown inline
 ```
 
-Keys are generated in the browser and stored in `storage.local` . They never leave your device.
+Keys are generated in the browser and stored in `chrome.storage.local`. They never leave your device.
 
-![how it works](https://github.com/retiredroca/CryptoChat/blob/main/validation-testing.gif?raw=true)
+---
+
+## Supported sites
+
+CryptoChat ships adapters for these hosts. Each adapter declares the input/send/message selectors for that site (see [`src/adapters/`](chrome/src/adapters)).
+
+| Site | Composer | Host(s) |
+|---|---|---|
+| Discord | Slate.js editor | `discord.com` |
+| Slack | Quill editor | `*.slack.com`, `app.slack.com` |
+| WhatsApp Web | contenteditable | `web.whatsapp.com` |
+| Telegram Web | contenteditable | `web.telegram.org` |
+| Instagram DMs | Lexical editor | `www.instagram.com` |
+| X / Twitter | React contenteditable | `x.com`, `twitter.com` |
+| Facebook Messenger | Draft.js editor | `www.facebook.com`, `www.messenger.com` |
+
+**Any-site mode:** enable *Settings → Enable on all sites* in the popup. CryptoChat requests access to all sites and registers its generic detector for pages that don't have a dedicated adapter. Only do this if you want the overlay on arbitrary sites.
+
 ---
 
 ## Crypto
 
-All cryptographic operations use the browser's built-in **Web Crypto API** (`SubtleCrypto`). There are zero third-party crypto dependencies.
+All operations use the browser's built-in **Web Crypto API** (`SubtleCrypto`). There are no runtime crypto dependencies. The optional post-quantum bundle is built from the [`mlkem`](https://www.npmjs.com/package/mlkem) package (build-time only).
 
 | Layer | Algorithm | Details |
 |---|---|---|
-| Key exchange | ECDH P-256 | One keypair per user identity, stored locally |
+| Key exchange | ECDH P-256 | One keypair per identity, stored locally |
 | 1:1 encryption | AES-256-GCM | Random 96-bit IV per message |
-| Group encryption | AES-256-GCM + AES-KW | Random DEK per message, wrapped individually per recipient |
-| GPG bridge | PGP packet parser → SPKI | ECC P-256/P-384/P-521 converted to SubtleCrypto keys |
-| Key fingerprint | SHA-256 of SPKI | Shown in UI for out-of-band verification |
+| Group encryption | AES-256-GCM + AES-KW | Random DEK per message, wrapped per recipient |
+| Hybrid (PQC) | ECDH P-256 + ML-KEM-768 → HKDF-SHA256 | `CRYPTOCHAT_V2` / `CRYPTOCHAT_GRPV2` |
+| GPG bridge | PGP packet parser → SPKI | ECC P-256/P-384/P-521 bridged to SubtleCrypto |
+| Native fingerprint | SHA-256 of SPKI | Shown in the UI for out-of-band verification |
+| GPG fingerprint | OpenPGP v4 (SHA-1) / v5 (SHA-256) | Matches GnuPG/Kleopatra |
 
 ### Wire formats
 
-Every encrypted message is plain text that any platform can transmit as a normal chat message.
+Every encrypted message is plain text any platform can transmit as a normal chat message.
 
-**1:1 message:**
+**1:1 (classical):**
 ```
-CRYPTOCHAT_V1:<base64_iv>:<base64_ciphertext>:<base64_senderPubKey>
-```
-
-**Group message:**
-```
-CRYPTOCHAT_GRP_V1:<base64_msgId>:<base64_iv>:<base64_encryptedBody>:<base64_slotsJson>
+CRYPTOCHAT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
 ```
 
-In the group format, `slotsJson` is an array of per-recipient objects: `{ h: handle, p: recipientPubKeyB64, dek: base64_wrappedDEK }`. The body is encrypted once with a random Data Encryption Key (DEK); each slot wraps that DEK for one recipient using their ECDH-derived AES-KW key. Any recipient can unwrap their slot to get the DEK and decrypt the body.
+**1:1 (hybrid PQC):**
+```
+CRYPTOCHAT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
+```
+
+**Group (classical):**
+```
+CRYPTOCHAT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+```
+
+**Group (hybrid PQC):**
+```
+CRYPTOCHAT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+```
+
+In the classical group format, `slotsJson` is `[{ h: handle, p: recipientPubKeyB64, dek: wrappedDEK }]`. The body is encrypted once with a random Data Encryption Key (DEK); each slot wraps that DEK for one recipient with their ECDH-derived AES-KW key.
+
+In the hybrid formats, each slot carries the recipient's ECDH key, an ML-KEM ciphertext, and the wrapped DEK. The hybrid key is `HKDF-SHA256(ECDH_secret || ML-KEM_secret)`, with both public keys and the ML-KEM ciphertext bound into the KDF context. An attacker must break **both** ECDH and ML-KEM to recover a message.
+
+### Enabling post-quantum mode
+
+The source tree ships with a stub, so the default build is classical (V1). To enable the hybrid V2 path:
+
+```bash
+npm install
+npm run build:pqc     # bundles mlkem into src/vendor/mlkem768.js
+npm run build         # rebuild both packages
+```
+
+Once the bundle is present, new identities automatically get an ML-KEM-768 key, and messages are upgraded to V2 whenever both parties advertise one. Existing V1 messages keep working.
 
 ---
 
@@ -61,92 +116,73 @@ In the group format, `slotsJson` is an array of per-recipient objects: `{ h: han
 
 ```
 cryptochat-extension/
-├── manifest.json               # Chrome / Brave / Edge (MV3, service_worker)
-├── manifest.firefox.json       # Firefox (MV3, scripts[] — incompatible with Chrome)
-├── build.js                    # Build script: verify, swap manifests, pack dist/
-├── generate-icons.js           # Icon generator (requires npm install canvas)
-├── icons/
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── src/
-    ├── background-loader.js    # Classic script entry point — calls importScripts()
-    ├── background-bundle.js    # ★ Self-contained bundle: engine + keystore + handler
-    ├── content.js              # Injected into all supported platforms
-    ├── crypto/
-    │   ├── engine.js           # ES module source: ECDH, AES-GCM, group crypto, GPG parser
-    │   └── keystore.js         # ES module source: identity + contact persistence
-    └── ui/
-        ├── popup.html
-        ├── popup.css
-        └── popup.js
+├── package.json                 # dev tooling (esbuild, archiver, mlkem) — no runtime deps
+├── chrome/                      # Chrome / Brave / Edge package (MV3, service_worker)
+│   ├── manifest.json
+│   ├── build.js                 # pack chrome/dist/cryptochat-chrome.zip
+│   ├── docs/index.html          # GitHub Pages landing page
+│   └── src/
+│       ├── background-loader.js # importScripts() entry (vendor stub + bundle)
+│       ├── background-bundle.js # ★ GENERATED — engine + keystore + handler
+│       ├── background/          # handler.js + index.js (source)
+│       ├── crypto/
+│       │   ├── engine.js        # ECDH, AES-GCM, group, hybrid PQC, GPG parser
+│       │   └── keystore.js      # identity + contact persistence
+│       ├── adapters/            # per-site input/send/message selectors
+│       ├── content.js           # input detection, overlay UI, feed decryption
+│       ├── vendor/              # mlkem stub (or built bundle)
+│       └── ui/                  # popup.html / popup.css / popup.js
+├── mozilla/                     # Firefox package (identical runtime; scripts[] manifest)
+├── scripts/                     # bundle / sync / pack / PQC build scripts
+└── test/                        # Node crypto round-trip tests
 ```
 
-> **Why two manifests?** Chrome MV3 requires `"service_worker"` in the background field and **rejects** `"scripts"` with the error *"requires manifest version 2 or lower"*. Firefox MV3 requires `"scripts"` and fails silently with status code 15 if given `"service_worker"`. They are mutually exclusive. `build.js` handles swapping the right one into place.
+Both browser directories are independently loadable. Their runtime code is identical — only `manifest.json` differs. `mozilla/build.js` syncs the shared runtime from `chrome/` before packing so the two can never drift.
 
-> **Why a bundle?** ES module service workers work in Chrome but fail in Firefox. `background-bundle.js` is a single classic (non-module) script that uses `importScripts()`, which works in both browsers. The bundle is hand-maintained; a proper Rollup/esbuild pipeline is on the roadmap.
+**Why a generated bundle?** ES-module service workers work in Chrome but are unreliable in Firefox MV3. `background-bundle.js` is a single classic (non-module) IIFE built from the ES-module sources via esbuild, loaded with `importScripts()`.
 
 ---
 
-## Installation
+## Install
 
-### Prerequisites
+Requires Node.js only for building. The extension itself has no runtime dependencies.
 
-Node.js is required only for the build script (`build.js`). The extension itself has no runtime dependencies.
+```bash
+git clone https://github.com/retiredroca/CryptoChat.git
+cd CryptoChat
+npm install
+npm run build          # bundles + packs both browsers
+```
 
 ### Chrome / Brave / Edge
 
-```bash
-git clone https://github.com/YOUR_USERNAME/cryptochat-extension.git
-cd cryptochat-extension
-node build.js        # verify all files are present
-```
-
 1. Open `chrome://extensions/`
-2. Enable **Developer mode** (toggle, top right)
-3. Click **Load unpacked** → select the `cryptochat-extension/` folder
-4. The lock icon appears in your toolbar
+2. Enable **Developer mode**
+3. **Load unpacked** → select the `chrome/` folder
 
-### Firefox (temporary — disappears on restart)
+### Firefox (temporary)
+
+1. Open `about:debugging` → **This Firefox**
+2. **Load Temporary Add-on…** → select `mozilla/manifest.json`
+
+### Firefox (persistent)
+
+Build the `.xpi` and either drag it onto Firefox Developer Edition (`xpinstall.signatures.required = false`) or sign it for free via [addons.mozilla.org](https://addons.mozilla.org) ("On your own", unlisted).
 
 ```bash
-node build.js firefox    # swaps manifest.firefox.json → manifest.json
+npm run build:firefox
+# → mozilla/dist/cryptochat-firefox.xpi
 ```
 
-1. Open `about:debugging`
-2. Click **This Firefox**
-3. Click **Load Temporary Add-on…** → select `manifest.json`
+### Build commands
 
 ```bash
-node build.js restore    # restore Chrome manifest when done
-```
-
-### Firefox (persistent — survives restarts)
-
-**Option A — Firefox Developer Edition (easiest for development):**
-
-1. Install [Firefox Developer Edition](https://www.mozilla.org/en-US/firefox/developer/)
-2. Open `about:config` → set `xpinstall.signatures.required` to `false`
-3. Build the `.xpi`:
-   ```bash
-   node build.js pack
-   ```
-4. Drag `dist/cryptochat-firefox.xpi` onto the Firefox Dev Edition window
-
-**Option B — Sign via AMO (works in regular Firefox, free, ~5 minutes):**
-
-1. Create a free account at [addons.mozilla.org](https://addons.mozilla.org)
-2. Go to **Submit a New Add-on** → choose **"On your own"** (unlisted — skips review queue)
-3. Upload `dist/cryptochat-firefox.xpi`
-4. Download the signed `.xpi` Mozilla returns and install it in any Firefox
-
-### Build both packages at once
-
-```bash
-node build.js pack
-# produces:
-#   dist/cryptochat-chrome.zip    — load unpacked in Chrome
-#   dist/cryptochat-firefox.xpi  — drag onto Firefox Dev Edition
+npm run bundle         # regenerate background-bundle.js from source modules
+npm run build:chrome   # chrome/dist/cryptochat-chrome.zip
+npm run build:firefox  # sync chrome → mozilla, then mozilla/dist/cryptochat-firefox.xpi
+npm run build          # both
+npm run build:pqc      # enable ML-KEM-768 hybrid mode
+npm test               # crypto round-trip + handler tests (Node)
 ```
 
 ---
@@ -155,55 +191,34 @@ node build.js pack
 
 ### First-time setup
 
-1. Click the CryptoChat lock icon in your toolbar
-2. Go to **My Keys** tab
-3. Copy your public key and send it to whoever you want to message securely (email, any public channel — it's safe to share)
-4. Ask them to do the same and paste their key into your Contacts tab
+1. Click the CryptoChat icon in the toolbar → **My Keys**
+2. Copy your public key and share it (it is safe to share publicly)
+3. Add contacts in the **Contacts** tab
 
 ### Adding a contact
 
-**Another CryptoChat user:**
-1. **Contacts** → **+ Add contact**
-2. Enter their handle (e.g. `@alice`) and platform
-3. Select **Native key (base64)** and paste their public key from their My Keys tab
-4. Click **Save contact**
+- **CryptoChat user:** paste their SPKI base64 key from their *My Keys* tab.
+- **GPG/Kleopatra user:** export their public key and paste the armored block. ECC P-256/P-384/P-521 import natively; RSA keys are stored for a future bridge.
+- **Share link:** generate a link under *My Keys → Share your key*; anyone who opens it with CryptoChat installed is added in one click.
 
-**GPG / Kleopatra user:**
-1. In Kleopatra: right-click their key → **Export…** → copy the armor block
-2. **Contacts** → **+ Add contact** → select **GPG / Kleopatra armor**
-3. Paste the `-----BEGIN PGP PUBLIC KEY BLOCK-----` block
-4. Click **Save contact** — ECC keys (P-256/P-384/P-521) import natively; RSA keys are stored for a future bridge
+### Sending
 
-### Sending an encrypted 1:1 message
+1. Make sure the site is enabled (supported host, or any-site mode).
+2. A lock button appears on the message box. Click it.
+3. Pick a recipient (1:1) or tick recipients (Group), type your message, and press **Encrypt & send**.
+4. Ciphertext is injected into that box and sent.
 
-1. Open the platform to the conversation you want
-2. Click the CryptoChat icon in your toolbar
-3. Select the recipient from the dropdown
-4. Type your message in the secure compose area
-5. Click **Encrypt & inject** — ciphertext is injected into the platform's input box automatically
-6. Press Enter / Send on the platform as normal
+### Reading
 
-### Sending an encrypted group message
+Encrypted messages in a feed are detected automatically. If the sender is a known contact, they decrypt inline; otherwise a click-to-decrypt overlay appears and prompts you to add the sender.
 
-1. Click the CryptoChat icon
-2. Switch to **Group** mode
-3. Tick the checkboxes next to each recipient (everyone must be in your Contacts with a key)
-4. Type your message → **Encrypt & inject**
-5. Any ticked recipient with CryptoChat installed can click the overlay and decrypt it
+### Backup
 
-### Reading an encrypted message
-
-When a CryptoChat message appears in any supported platform's feed, it shows as:
-
-```
-🔒 Encrypted message   click to decrypt
-```
-
-Click it. If you have the sender saved as a contact with their key, it decrypts inline instantly. If not, you'll see an error prompting you to add them first.
+*My Keys → Export backup* writes a passphrase-protected `.ccbackup` containing your identity (ECDH + ML-KEM) and contacts. Import it on another device, in **Merge** or **Replace** mode.
 
 ---
 
-## GPG / OpenPGP key compatibility
+## GPG / OpenPGP compatibility
 
 | Key type | Status | Notes |
 |---|---|---|
@@ -211,64 +226,61 @@ Click it. If you have the sender saved as a contact with their key, it decrypts 
 | ECC P-384 | ✅ Full support | |
 | ECC P-521 | ✅ Full support | |
 | Curve25519 / X25519 | ⚠ Stored only | SubtleCrypto X25519 support is inconsistent across browsers |
-| RSA 2048 / 4096 | ⚠ Stored only | Needs openpgp.js bridge — on the roadmap |
+| RSA 2048 / 4096 | ⚠ Stored only | Needs an openpgp.js bridge — on the roadmap |
 | Ed25519 | ⚠ Not applicable | Signing key only, not used for encryption |
 
 ---
 
 ## Security model
 
-### What CryptoChat protects against
+### Protects against
+- The platform reading your message content at rest or in transit
+- Server-side breaches exposing plaintext
+- Passive network interception beyond TLS
+- The platform being compelled to hand over message contents
 
-- The platform (Discord, Facebook, X, etc.) reading your message content at rest or in transit
-- Server-side data breaches at the platform level exposing your plaintext
-- Passive network interception (even beyond TLS)
-- The platform itself being compelled to hand over message contents
-
-### What CryptoChat does not protect against
-
-- Malicious browser extensions with access to the same pages (they could read the decrypted DOM)
-- Keyloggers or OS-level compromise on your machine
-- Someone with physical access to your unlocked browser profile
-- The platform's own JavaScript being replaced (supply chain / CDN compromise)
+### Does not protect against
+- Malicious extensions with access to the same pages (they can read the decrypted DOM)
+- Keyloggers or OS compromise
+- Someone with access to your unlocked browser profile
+- The platform's JavaScript being replaced (supply chain)
 - Your contact's device being compromised before or after decryption
 
-### A note on platforms with their own encryption
+Private keys are stored in `chrome.storage.local`. Use a full-disk passphrase and a locked profile for stronger protection.
 
-**X/Twitter XChat** and **WhatsApp Web** already have their own end-to-end encryption. CryptoChat adds a second independent layer — the platform encrypts the transport, CryptoChat encrypts the content. Even if the platform's encryption were broken or bypassed, your plaintext would still be CryptoChat-encrypted at the application layer.
-
-**This is alpha software. It has not been independently audited. Do not rely on it for communications where your physical safety or legal exposure depends on it.**
+**This is alpha software. It has not been independently audited. Do not rely on it where your physical safety or legal exposure depends on it.**
 
 ---
 
-## Platform selector maintenance
+## Platform adapter maintenance
 
-All platforms are targeted using stable attributes (`aria-label`, `role`, `data-testid`, `data-*`) rather than CSS class names. Facebook, Instagram, and X hash their class names on every deploy — class-based selectors break constantly. The attribute-based approach is much more resilient, but platform DOM changes can still break things.
+Adapters live in [`chrome/src/adapters/`](chrome/src/adapters). Each registers `{ id, match, inputSelectors, sendSelectors, messageSelectors, notes }` on `globalThis.CC_ADAPTERS`. Prefer stable attributes (`aria-label`, `role`, `data-testid`, `data-*`) over hashed class names.
 
-If something stops working after a platform update, check `src/content.js` — the `INPUT_SELECTORS` and `MESSAGE_SELECTORS` arrays at the top are the first things to update. Each platform's `src/adapters/` file documents the expected DOM structure in detail.
+To add a site: create `src/adapters/<site>.js`, add it to both `manifest.json` files' `content_scripts.js` array, add the host to `host_permissions`, `content_scripts.matches`, and `PLATFORM_MATCHES` in `popup.js`, and document it in the table above.
+
+Feed decryption is intentionally platform-agnostic (a universal DOM text scanner) so it survives markup churn; message selectors are provided as an optimization/reference.
 
 ---
 
 ## Roadmap
 
-- [ ] Rollup/esbuild build pipeline — auto-bundle `engine.js` + `keystore.js` into `background-bundle.js`
+- [ ] ECDSA signatures — verify message authenticity, not just decrypt
 - [ ] RSA GPG bridge via openpgp.js (loaded on demand)
-- [ ] X25519 support once SubtleCrypto coverage is consistent across Chrome + Firefox
-- [ ] Full-fingerprint verification UI with out-of-band comparison flow
+- [ ] X25519 support once SubtleCrypto coverage is consistent
+- [ ] Full-fingerprint verification UI with out-of-band comparison
 - [ ] QR code key exchange for in-person setup
-- [ ] AMO listing for persistent Firefox install without Developer Edition
-- [ ] Key signing — ECDSA signatures so recipients can verify message authenticity, not just decrypt
+- [ ] AMO listing for persistent Firefox install
 
 ---
 
 ## Contributing
 
-PRs welcome. The most useful contributions right now:
+PRs welcome. Especially useful: keeping adapters current, adding new sites, the RSA bridge, and security review of the crypto implementation. Run `npm test` before submitting.
 
-- Keeping platform selectors current as Discord/Slack/Facebook/Instagram update their UIs
-- Adding new platform adapters (Teams, Mattermost, LinkedIn, Signal Desktop, etc.)
-- The Rollup/esbuild build pipeline
-- RSA GPG bridge
-- Security review of the crypto implementation
+---
 
-When adding a new platform: create `src/adapters/<platform>.js` documenting the DOM structure, add selectors to `INPUT_SELECTORS` and `MESSAGE_SELECTORS` in `src/content.js`, add the hostname to both manifests, and add the platform to the popup dropdown and settings grid.
+## License
+
+Copyright (C) 2026 RetiredRoca
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License**, version 3 or later. If you run a modified version as a network service, you must make your modified source available to its users. See [`LICENSE`](LICENSE).

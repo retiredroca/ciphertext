@@ -1,13 +1,27 @@
 {
   "manifest_version": 3,
   "name": "CryptoChat",
-  "version": "0.5.4",
-  "description": "E2E encrypted text. Supports ECDH keys and GPG/OpenPGP import.",
+  "version": "0.8.0",
+  "description": "End-to-end encrypted text on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook — plus optional any-site mode.",
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "clipboardWrite",
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
+    "https://discord.com/*",
+    "https://*.slack.com/*",
+    "https://web.whatsapp.com/*",
+    "https://web.telegram.org/*",
+    "https://www.instagram.com/*",
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://www.facebook.com/*",
+    "https://www.messenger.com/*",
+    "https://retiredroca.github.io/*"
+  ],
+  "optional_host_permissions": [
     "<all_urls>"
   ],
   "background": {
@@ -16,9 +30,24 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "https://discord.com/*",
+        "https://*.slack.com/*",
+        "https://web.whatsapp.com/*",
+        "https://web.telegram.org/*",
+        "https://www.instagram.com/*",
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://www.facebook.com/*",
+        "https://www.messenger.com/*",
+        "https://retiredroca.github.io/*"
       ],
       "js": [
+        "src/adapters/discord.js",
+        "src/adapters/slack.js",
+        "src/adapters/others.js",
+        "src/adapters/instagram.js",
+        "src/adapters/twitter.js",
+        "src/adapters/facebook.js",
         "src/content.js"
       ],
       "run_at": "document_idle"
@@ -37,11 +66,5 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "cryptochat@extension",
-      "strict_min_version": "109.0"
-    }
   }
 }

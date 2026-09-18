@@ -1,0 +1,22 @@
+{
+  "name": "cryptochat-extension",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end encrypted messaging layered on top of any web text input.",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "bundle": "node scripts/bundle-background.js",
+    "build:chrome": "node chrome/build.js",
+    "build:firefox": "node mozilla/build.js",
+    "build": "npm run bundle && node chrome/build.js && node mozilla/build.js",
+    "build:pqc": "node scripts/build-pqc.js",
+    "sync:firefox": "node scripts/sync-firefox.js",
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "esbuild": "^0.25.0",
+    "mlkem": "^2.0.0"
+  }
+}

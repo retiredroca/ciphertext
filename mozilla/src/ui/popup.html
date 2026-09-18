@@ -16,7 +16,7 @@
         <path d="M8 10V8a3 3 0 016 0v2" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
       </svg>
       <span class="logo-name">CryptoChat</span>
-      <span class="version">v0.7</span>
+      <span class="version">v0.8</span>
     </div>
     <a id="gh-header-link" href="https://github.com/retiredroca/CryptoChat" target="_blank"
        title="GitHub" style="color:var(--tx3);display:flex;align-items:center;line-height:0">
@@ -261,23 +261,29 @@
     <div class="card">
       <div class="card-title">Preferences</div>
       <div class="setting">
-        <div><div class="sname">Blur ciphertext in feed</div><div class="sdesc">Replace raw ciphertext with a click-to-decrypt overlay</div></div>
+        <div><div class="sname">Auto-decrypt in feed</div><div class="sdesc">Replace raw ciphertext with a click-to-decrypt overlay</div></div>
         <label class="toggle"><input type="checkbox" id="pref-blur" checked><span></span></label>
       </div>
       <div class="setting">
-        <div><div class="sname">Auto-detect recipient</div><div class="sdesc">Pre-fill from current context</div></div>
-        <label class="toggle"><input type="checkbox" id="pref-auto" checked><span></span></label>
+        <div><div class="sname">Compose button on message boxes</div><div class="sdesc">Attach the CryptoChat lock to detected input boxes</div></div>
+        <label class="toggle"><input type="checkbox" id="pref-overlay" checked><span></span></label>
       </div>
+      <div class="setting">
+        <div><div class="sname">Enable on all sites</div><div class="sdesc">Run on any site with a text input (asks for permission)</div></div>
+        <label class="toggle"><input type="checkbox" id="pref-allsites"><span></span></label>
+      </div>
+      <div id="allsites-note" class="hint" style="margin-top:6px"></div>
     </div>
 
     <div class="card">
       <div class="card-title">About</div>
-      <div class="about"><span class="al">Version</span><span>0.7.0</span></div>
+      <div class="about"><span class="al">Version</span><span>0.8.0</span></div>
       <div class="about"><span class="al">Crypto</span><span>ECDH P-256 · AES-256-GCM · AES-KW</span></div>
+      <div class="about"><span class="al">Hybrid PQC</span><span>ECDH P-256 + ML-KEM-768 (when bundle installed)</span></div>
       <div class="about"><span class="al">Group</span><span>Per-message DEK, per-recipient slot</span></div>
       <div class="about"><span class="al">GPG</span><span>ECC (P-256/384/521) native bridge</span></div>
-      <div class="about"><span class="al">Keys stored</span><span>Local only (IndexedDB)</span></div>
-      <div class="about"><span class="al">Works on</span><span>Any web page with a text input</span></div>
+      <div class="about"><span class="al">Keys stored</span><span>Local only (chrome.storage.local)</span></div>
+      <div class="about"><span class="al">Sites</span><span>7 platforms + optional any-site mode</span></div>
     </div>
   </div>
 

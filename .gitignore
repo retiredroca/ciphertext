@@ -1,1 +1,6 @@
 oc.sh
+node_modules/
+dist/
+chrome/dist/
+mozilla/dist/
+*.log
