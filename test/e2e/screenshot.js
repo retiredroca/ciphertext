@@ -32,6 +32,20 @@ async function panelReady(driver) {
   `), 15000, 'compose panel should open');
 }
 
+/** Resize the browser window until the content viewport is exactly w x h. */
+async function setViewport(driver, w, h) {
+  for (let i = 0; i < 5; i++) {
+    const rect = await driver.manage().window().getRect();
+    const [iw, ih] = await driver.executeScript('return [window.innerWidth, window.innerHeight]');
+    if (iw === w && ih === h) return;
+    await driver.manage().window().setRect({
+      width:  rect.width  + (w - iw),
+      height: rect.height + (h - ih),
+    });
+    await driver.sleep(120);
+  }
+}
+
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   H.prepareTestAddon();
@@ -39,9 +53,9 @@ async function panelReady(driver) {
   const driver = await H.launchWithAddon({ headless: process.env.CC_E2E_HEADED !== '1' });
 
   try {
-    // Cap the capture so screenshots stay within 1280x800 for the README/Pages.
-    await driver.manage().window().setRect({ width: MAX_W, height: MAX_H });
     await driver.get(baseUrl);
+    // Exact 1280x800 viewport (Chrome Web Store screenshot size).
+    await setViewport(driver, MAX_W, MAX_H);
 
     const btn = await H.waitForOverlay(driver);
     await driver.sleep(400);
