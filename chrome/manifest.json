@@ -2,12 +2,10 @@
   "manifest_version": 3,
   "name": "CryptoChat",
   "version": "0.8.0",
-  "description": "End-to-end encrypted text on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook — plus optional any-site mode.",
+  "description": "End-to-end encrypted text on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook.",
   "permissions": [
     "storage",
-    "clipboardWrite",
-    "scripting",
-    "activeTab"
+    "clipboardWrite"
   ],
   "host_permissions": [
     "https://discord.com/*",
@@ -20,9 +18,6 @@
     "https://www.facebook.com/*",
     "https://www.messenger.com/*",
     "https://retiredroca.github.io/*"
-  ],
-  "optional_host_permissions": [
-    "<all_urls>"
   ],
   "background": {
     "service_worker": "src/background-loader.js"

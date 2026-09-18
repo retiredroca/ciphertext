@@ -14,7 +14,7 @@ Works in **Chrome, Brave, Edge, Firefox, and LibreWolf**. No accounts, no server
 - **Native + GPG keys.** Import a CryptoChat public key, or a Kleopatra/GnuPG armored ECC key.
 - **Share links.** Generate a link that adds you as a contact in one click.
 - **Encrypted backups.** Move your identity and contacts between browsers with a passphrase-protected `.ccbackup` file.
-- **Optional any-site mode.** Not on the supported list? Grant access and CryptoChat works on any site with a text input.
+- **Optional any-site mode (Firefox/LibreWolf).** Not on the supported list? Grant access and CryptoChat works on any site with a text input. The Chrome build stays lean and requests only the seven platform hosts.
 
 ---
 
@@ -66,7 +66,7 @@ CryptoChat ships adapters for these hosts. Each adapter declares the input/send/
 | X / Twitter | React contenteditable | `x.com`, `twitter.com` |
 | Facebook Messenger | Draft.js editor | `www.facebook.com`, `www.messenger.com` |
 
-**Any-site mode:** enable *Settings → Enable on all sites* in the popup. CryptoChat requests access to all sites and registers its generic detector for pages that don't have a dedicated adapter. Only do this if you want the overlay on arbitrary sites.
+**Any-site mode (Firefox/LibreWolf):** enable *Settings → Enable on all sites* in the popup. CryptoChat requests access to all sites and registers its generic detector for pages that don't have a dedicated adapter. The Chrome build omits this feature so it requests no broad host permissions, and runs on the seven supported platforms only.
 
 ---
 

@@ -731,17 +731,35 @@ async function savePref(key, value) {
   await msg('SET_PREFS', { prefs: { [key]: value } });
 }
 
+/** True only when the manifest declares the optional <all_urls> permission. */
+function supportsAllSites() {
+  try {
+    const m = chrome.runtime.getManifest();
+    return Array.isArray(m.optional_host_permissions) &&
+      m.optional_host_permissions.includes('<all_urls>');
+  } catch (_) { return false; }
+}
+
 async function initSettings() {
   const { prefs } = await msg('GET_PREFS');
   $('pref-blur').checked    = prefs.blur    !== false;
   $('pref-overlay').checked = prefs.overlay !== false;
 
+  $('pref-blur').addEventListener('change',    () => savePref('blur',    $('pref-blur').checked));
+  $('pref-overlay').addEventListener('change', () => savePref('overlay', $('pref-overlay').checked));
+
+  // Any-site mode is only offered where the manifest declares optional
+  // <all_urls> (Firefox/LibreWolf). The Chrome build omits it to keep the
+  // permission set narrow and avoid a broad-host-permission review.
+  if (!supportsAllSites()) {
+    document.getElementById('setting-allsites')?.remove();
+    document.getElementById('allsites-note')?.remove();
+    return;
+  }
+
   const on = await allSitesEnabled();
   $('pref-allsites').checked = on;
   updateAllSitesNote(on);
-
-  $('pref-blur').addEventListener('change',    () => savePref('blur',    $('pref-blur').checked));
-  $('pref-overlay').addEventListener('change', () => savePref('overlay', $('pref-overlay').checked));
 
   $('pref-allsites').addEventListener('change', async () => {
     const want = $('pref-allsites').checked;

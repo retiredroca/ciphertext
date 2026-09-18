@@ -30,7 +30,7 @@ CryptoChat adds an independent layer of end-to-end encryption on top of the chat
 
 A small lock button appears on the message box. Click it, choose a recipient, type, and send. CryptoChat encrypts locally and injects the ciphertext into the normal input box.
 
-Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger. An optional mode enables it on any site with a text field.
+Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger.
 
 Features
 • 1:1 and group messages
@@ -53,10 +53,10 @@ Productivity
 
 - **storage** — store the user's identity keypair and contacts locally, on-device only.
 - **clipboardWrite** — copy the user's public key or encrypted text to the clipboard on request.
-- **scripting** — register the optional "all sites" content script only after the user enables that setting.
-- **activeTab** — inject encrypted text into the focused input of the current tab when the user clicks Encrypt & inject.
 - **Host permissions** (`discord.com`, `*.slack.com`, `web.whatsapp.com`, `web.telegram.org`, `www.instagram.com`, `x.com`, `twitter.com`, `www.facebook.com`, `www.messenger.com`, `retiredroca.github.io`) — run the composer overlay on the supported platforms and the share-link page.
-- **optional_host_permissions `<all_urls>`** — optional any-site mode; requested at runtime only when the user turns it on.
+
+No optional/broad host permissions are requested. Any-site mode is a
+Firefox/LibreWolf-only feature (see the AMO listing below).
 
 ### Data usage
 
