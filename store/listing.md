@@ -93,3 +93,21 @@ Open source under AGPL-3.0.
 
 CryptoChat is alpha software and has not been independently audited. Don't rely on it where your safety or legal exposure depends on it.
 ```
+
+---
+
+## Privacy policy
+
+Hosted at: **https://retiredroca.github.io/CryptoChat/privacy.html**
+(source: [`privacy.html`](../privacy.html), served from the GitHub Pages root).
+
+Chrome Web Store › Privacy practices answers:
+
+- **Does the extension collect or use user data?** No.
+- **Data types collected:** none.
+- **Sold to third parties:** no.
+- **Used for purposes unrelated to the single purpose:** no.
+- **Used to determine creditworthiness or for lending:** no.
+- **Remote code:** none.
+
+Firefox/AMO also links this policy.

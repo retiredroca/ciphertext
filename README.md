@@ -134,6 +134,7 @@ To build a classical-only (V1) package, delete `src/vendor/mlkem768.js`; `backgr
 cryptochat-extension/
 ├── package.json                 # dev tooling (esbuild, archiver, mlkem) — no runtime deps
 ├── index.html                   # GitHub Pages landing page (served from repo root)
+├── privacy.html                 # privacy policy (linked from the stores)
 ├── chrome/                      # Chrome / Brave / Edge package (MV3, service_worker)
 │   ├── manifest.json
 │   ├── build.js                 # pack chrome/dist/cryptochat-chrome.zip
@@ -331,6 +332,15 @@ Feed decryption is intentionally platform-agnostic (a universal DOM text scanner
 ## Contributing
 
 PRs welcome. Especially useful: keeping adapters current, adding new sites, the RSA bridge, and security review of the crypto implementation. Run `npm test` before submitting.
+
+---
+
+## Privacy
+
+CryptoChat collects no data and has no servers. Keys and contacts are stored only in
+your browser; all cryptography runs locally. The full policy is in
+[`privacy.html`](privacy.html) (published at
+<https://retiredroca.github.io/CryptoChat/privacy.html>).
 
 ---
 

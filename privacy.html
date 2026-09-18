@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Privacy Policy — CryptoChat</title>
+<meta name="description" content="CryptoChat privacy policy: no data collection, all cryptography runs locally in your browser."/>
+<style>
+:root{
+  --acc:#6C4FF0; --acc-l:#EBE7FD; --bg:#F8F7FE; --card:#fff;
+  --tx:#1A1625; --tx2:#5A5470; --tx3:#9490AE; --bdr:rgba(108,79,240,.15); --r:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#14111F;--card:#1E1B2E;--tx:#EAE8F4;--tx2:#9E9BBD;--tx3:#6B6889;
+    --acc-l:rgba(108,79,240,.18);--bdr:rgba(108,79,240,.25);}
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);
+  color:var(--tx);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:24px 16px 60px;line-height:1.65}
+a{color:var(--acc)}
+.site-header{width:100%;max-width:760px;display:flex;align-items:center;
+  justify-content:space-between;margin-bottom:32px;padding-top:8px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:var(--acc);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-size:18px;font-weight:700;color:var(--tx);letter-spacing:-.02em}
+.gh-link{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2);
+  text-decoration:none;padding:6px 12px;border:1px solid var(--bdr);border-radius:999px}
+.gh-link:hover{background:var(--acc-l);color:var(--acc)}
+main{width:100%;max-width:760px;background:var(--card);border:1px solid var(--bdr);
+  border-radius:16px;padding:36px 32px}
+h1{font-size:clamp(24px,4vw,32px);font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.updated{font-size:13px;color:var(--tx3);margin-bottom:26px}
+h2{font-size:17px;font-weight:700;margin:28px 0 8px}
+p,li{font-size:15px;color:var(--tx2)}
+ul{margin:8px 0 0 20px}
+li{margin-bottom:4px}
+.summary{background:var(--acc-l);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:14px 16px;color:var(--tx);font-size:15px;margin-bottom:8px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+  background:var(--bg);border:1px solid var(--bdr);border-radius:5px;padding:1px 5px}
+footer{margin-top:28px;font-size:12px;color:var(--tx3);text-align:center}
+footer a{color:var(--tx3)}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="./">
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
+        <rect x="5" y="10" width="12" height="10" rx="2.5" fill="white" opacity=".95"/>
+        <path d="M8 10V8a3.5 3.5 0 017 0v2" stroke="white" stroke-width="1.8"
+              stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <span class="logo-name">CryptoChat</span>
+  </a>
+  <a class="gh-link" href="https://github.com/retiredroca/CryptoChat" target="_blank" rel="noopener">GitHub</a>
+</header>
+
+<main>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Effective September 18, 2026</div>
+
+  <div class="summary">
+    <strong>CryptoChat does not collect, transmit, sell, or share your data.</strong>
+    All encryption and decryption happens locally in your browser using the Web Crypto API.
+    Your private keys and contacts never leave your device.
+  </div>
+
+  <h2>1. Information we collect</h2>
+  <p>CryptoChat collects <strong>no personal information</strong>. There are no accounts,
+      no analytics, no telemetry, no advertising, and no tracking of any kind.</p>
+
+  <h2>2. What CryptoChat stores on your device</h2>
+  <p>To work, the extension saves the following <em>locally</em> in your browser's
+      extension storage (<code>chrome.storage.local</code>). This data is not accessible
+      to us and is never uploaded anywhere:</p>
+  <ul>
+    <li>Your identity keypair (a public key and a private key generated on your device)</li>
+    <li>Contacts you add, including their public keys</li>
+    <li>Your preferences (for example, whether to auto-decrypt messages)</li>
+  </ul>
+
+  <h2>3. How messages are handled</h2>
+  <p>When you send a message, CryptoChat encrypts it locally and places the ciphertext
+      into the web page's message input. Only the encrypted text reaches the platform
+      you are chatting on. When you receive a CryptoChat message, it is decrypted locally
+      in your browser. CryptoChat never sends your plaintext or your private key to us or
+      to any third party.</p>
+
+  <h2>4. Data sharing</h2>
+  <p>We do not share, sell, rent, or transfer any data to third parties. CryptoChat
+      contains no remote code and makes no requests to developer-operated servers.</p>
+
+  <h2>5. Permissions and why they are used</h2>
+  <ul>
+    <li><code>storage</code> — to save your keys, contacts, and preferences locally.</li>
+    <li><code>clipboardWrite</code> — to copy your public key or encrypted text when you ask.</li>
+    <li><strong>Host permissions</strong> for the supported chat sites — to run the
+        encryption composer on those pages only.</li>
+  </ul>
+  <p>The Firefox/LibreWolf build additionally offers an optional “enable on all sites”
+      permission, which is requested only if you turn it on.</p>
+
+  <h2>6. Data retention and deletion</h2>
+  <p>All data stays on your device. You can delete it at any time from the extension:
+      remove individual contacts, or use <em>Revoke &amp; regenerate</em> to destroy your
+      keypair. Uninstalling the extension removes its locally stored data.</p>
+
+  <h2>7. Children's privacy</h2>
+  <p>CryptoChat does not collect any data and is not directed at children.</p>
+
+  <h2>8. Open source</h2>
+  <p>CryptoChat is free software released under the
+      <a href="https://github.com/retiredroca/CryptoChat/blob/main/LICENSE">GNU AGPL-3.0</a>.
+      You can review exactly what the code does.</p>
+
+  <h2>9. Changes to this policy</h2>
+  <p>If this policy changes, the revised version will be posted on this page with a new
+      effective date.</p>
+
+  <h2>10. Contact</h2>
+  <p>Questions about this policy? Open an issue at
+      <a href="https://github.com/retiredroca/CryptoChat/issues">github.com/retiredroca/CryptoChat/issues</a>.</p>
+</main>
+
+<footer>
+  <p>
+    <a href="./">CryptoChat</a>
+    &nbsp;·&nbsp; AGPL-3 License &nbsp;·&nbsp; No servers. No tracking. No ads.
+  </p>
+</footer>
+
+</body>
+</html>
