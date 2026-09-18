@@ -16,7 +16,7 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
-  // mozilla/src/crypto/engine.js
+  // chrome/src/crypto/engine.js
   var engine_exports = {};
   __export(engine_exports, {
     b642buf: () => b642buf,
@@ -564,7 +564,7 @@
     );
   }
 
-  // mozilla/src/crypto/keystore.js
+  // chrome/src/crypto/keystore.js
   var keystore_exports = {};
   __export(keystore_exports, {
     clearSharedKeyCache: () => clearSharedKeyCache,
@@ -727,7 +727,7 @@
     return out;
   }
 
-  // mozilla/src/background/handler.js
+  // chrome/src/background/handler.js
   var PREFS_KEY = "cc_prefs";
   var DEFAULT_PREFS = { blur: true, overlay: true, allSites: false };
   chrome.runtime.onMessage.addListener((msg, _sender, respond) => {
@@ -1116,7 +1116,7 @@
     });
   }
 
-  // mozilla/src/background/index.js
+  // chrome/src/background/index.js
   globalThis.CCEngine = engine_exports;
   globalThis.CCKeystore = keystore_exports;
 })();

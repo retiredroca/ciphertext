@@ -373,7 +373,7 @@ async function renderContacts() {
         encodeURIComponent(name),
         encodeURIComponent(fp),
       ];
-      const link = `https://retiredroca.github.io/CryptoChat/#${parts.join(';')}`;
+      const link = `https://retiredroca.github.io/ciphertext/#${parts.join(';')}`;
       navigator.clipboard.writeText(link).then(() => {
         btn.textContent = '✓';
         setTimeout(() => { btn.textContent = '🔗'; }, 1600);
@@ -421,7 +421,6 @@ async function initKeys() {
   });
 
   // ── Share link generation ──────────────────────────────────────────
-  const SHARE_BASE = 'https://retiredroca.github.io/CryptoChat/#v1';
 
   function buildShareLink(handle, pubKeyB64, displayName, fingerprint) {
     const parts = [
@@ -432,7 +431,7 @@ async function initKeys() {
       encodeURIComponent(displayName || handle),
       encodeURIComponent(fingerprint || ''),
     ];
-    return `https://retiredroca.github.io/CryptoChat/#${parts.join(';')}`;
+    return `https://retiredroca.github.io/ciphertext/#${parts.join(';')}`;
   }
 
   $('btn-gen-link').addEventListener('click', async () => {

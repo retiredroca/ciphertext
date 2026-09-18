@@ -98,7 +98,7 @@ CryptoChat is alpha software and has not been independently audited. Don't rely 
 
 ## Privacy policy
 
-Hosted at: **https://retiredroca.github.io/CryptoChat/privacy.html**
+Hosted at: **https://retiredroca.github.io/ciphertext/privacy.html**
 (source: [`privacy.html`](../privacy.html), served from the GitHub Pages root).
 
 Chrome Web Store › Privacy practices answers:

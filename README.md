@@ -172,7 +172,7 @@ Both browser directories are independently loadable. Their runtime code is ident
 Requires Node.js only for building. The extension itself has no runtime dependencies.
 
 ```bash
-git clone https://github.com/retiredroca/CryptoChat.git
+git clone https://github.com/retiredroca/ciphertext.git
 cd CryptoChat
 npm install
 npm run build          # bundles + packs both browsers
@@ -340,7 +340,7 @@ PRs welcome. Especially useful: keeping adapters current, adding new sites, the 
 CryptoChat collects no data and has no servers. Keys and contacts are stored only in
 your browser; all cryptography runs locally. The full policy is in
 [`privacy.html`](privacy.html) (published at
-<https://retiredroca.github.io/CryptoChat/privacy.html>).
+<https://retiredroca.github.io/ciphertext/privacy.html>).
 
 ---
 
