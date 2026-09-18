@@ -18,21 +18,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import esbuild from 'esbuild';
+import { BANNER } from './lib/banner.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIRS = ['chrome', 'mozilla'];
-
-const BANNER = `// SPDX-License-Identifier: AGPL-3.0-or-later
-/**
- * background-bundle.js — GENERATED FILE, DO NOT EDIT.
- *
- * Built by scripts/bundle-background.js from:
- *   src/crypto/engine.js
- *   src/crypto/keystore.js
- *   src/background/index.js + handler.js
- *
- * Regenerate with: npm run bundle
- */`;
 
 let built = 0;
 for (const dir of DIRS) {
