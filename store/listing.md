@@ -1,0 +1,95 @@
+# CryptoChat — store listings
+
+Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.8.0.
+
+## Single purpose
+
+CryptoChat encrypts and decrypts messages in web chat input boxes, so supported
+platforms only ever see ciphertext.
+
+---
+
+## Chrome Web Store
+
+### Short description (≤ 132 characters)
+
+```
+End-to-end encryption for Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook. No servers; keys stay local.
+```
+
+Alternate:
+
+```
+End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook. Keys never leave your device.
+```
+
+### Detailed description
+
+```
+CryptoChat adds an independent layer of end-to-end encryption on top of the chat sites you already use. The platform stores and transmits only ciphertext — your plaintext never leaves your browser.
+
+A small lock button appears on the message box. Click it, choose a recipient, type, and send. CryptoChat encrypts locally and injects the ciphertext into the normal input box.
+
+Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger. An optional mode enables it on any site with a text field.
+
+Features
+• 1:1 and group messages
+• ECDH P-256 + AES-256-GCM, with optional hybrid post-quantum encryption (ML-KEM-768)
+• Add contacts by public key, GPG/OpenPGP armor, or a one-click share link
+• Decrypts messages inline; unknown senders show a click-to-decrypt overlay
+• Encrypted, passphrase-protected backups (.ccbackup)
+• No accounts, no servers, no tracking — keys are stored locally and never leave your device
+
+Open source under AGPL-3.0.
+
+CryptoChat is alpha software and has not been independently audited. Do not rely on it where your safety or legal exposure depends on it.
+```
+
+### Category
+
+Productivity
+
+### Permission justifications
+
+- **storage** — store the user's identity keypair and contacts locally, on-device only.
+- **clipboardWrite** — copy the user's public key or encrypted text to the clipboard on request.
+- **scripting** — register the optional "all sites" content script only after the user enables that setting.
+- **activeTab** — inject encrypted text into the focused input of the current tab when the user clicks Encrypt & inject.
+- **Host permissions** (`discord.com`, `*.slack.com`, `web.whatsapp.com`, `web.telegram.org`, `www.instagram.com`, `x.com`, `twitter.com`, `www.facebook.com`, `www.messenger.com`, `retiredroca.github.io`) — run the composer overlay on the supported platforms and the share-link page.
+- **optional_host_permissions `<all_urls>`** — optional any-site mode; requested at runtime only when the user turns it on.
+
+### Data usage
+
+No data is collected, transmitted, or sold. All cryptography runs locally in the
+browser using the Web Crypto API. The extension contains no remote code.
+
+---
+
+## Mozilla Add-ons (AMO)
+
+### Summary (≤ 250 characters)
+
+```
+End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook (plus any site, optionally). Keys never leave your browser; optional post-quantum hybrid encryption. No accounts, no servers.
+```
+
+### Description
+
+```
+CryptoChat encrypts your messages in your browser before they reach the platform, so Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook only ever see ciphertext.
+
+A small lock button appears on the message box. Click it, pick a recipient, type, and send — CryptoChat encrypts locally and injects the ciphertext into the normal input. Messages from contacts are decrypted inline; unknown senders show a click-to-decrypt overlay.
+
+Works in Firefox and LibreWolf on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger. An optional permission enables it on any site with a text field.
+
+Features
+• 1:1 and group messages
+• ECDH P-256 + AES-256-GCM; optional hybrid post-quantum encryption (ML-KEM-768)
+• Add contacts by public key, GPG/OpenPGP armor, or one-click share link
+• Encrypted .ccbackup export/import to move your identity between browsers
+• No accounts, no servers, no tracking — private keys stay on your device
+
+Open source under AGPL-3.0.
+
+CryptoChat is alpha software and has not been independently audited. Don't rely on it where your safety or legal exposure depends on it.
+```
