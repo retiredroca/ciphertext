@@ -156,3 +156,49 @@ test('OpenPGP fingerprints have the correct length per version', async () => {
   const v5 = await E.openpgpFingerprint(new Uint8Array([5, 0, 0, 0, 0, 1, 2, 3, 4]));
   assert.match(v5, /^[0-9a-f]{64}$/);
 });
+
+/* ── Legacy (pre-rebrand) token compatibility ───────────────────────── */
+
+function toLegacy(wire) { return wire.replace(/^CIPHERTEXT/, 'CRYPTOCHAT'); }
+
+test('legacy CRYPTOCHAT_V1 messages are detected and decrypt', async () => {
+  const alice = await makeEcdhIdentity();
+  const bob   = await makeEcdhIdentity();
+  const wire  = toLegacy(await E.encryptMessage('legacy v1', await sharedKey(alice.kp, bob.pub), alice.pub));
+  assert.ok(E.isV1Message(wire), 'legacy V1 detected');
+  const out = await E.decryptMessage(wire, await sharedKey(bob.kp, alice.pub));
+  assert.equal(out.plaintext, 'legacy v1');
+});
+
+test('legacy CRYPTOCHAT_GRP_V1 group messages decrypt', async () => {
+  const sender = await makeEcdhIdentity();
+  const r1 = await makeEcdhIdentity();
+  const wire = toLegacy(await E.encryptGroupMessage('legacy grp', sender.pub, sender.kp.privateKey, [
+    { handle: '@a', publicKeyB64: r1.pub, curve: 'P-256' },
+  ]));
+  assert.ok(E.isGroupMessage(wire), 'legacy group detected');
+  const out = await E.decryptGroupMessage(wire, r1.pub, r1.kp.privateKey, sender.pub);
+  assert.equal(out.plaintext, 'legacy grp');
+});
+
+test('legacy CRYPTOCHAT_V2 hybrid messages decrypt', async () => {
+  const sender = await makeEcdhIdentity();
+  const recipient = await makeEcdhIdentity();
+  const mk = await E.mlkemGenerateKeypair();
+  const wire = toLegacy(await E.encryptMessageV2('legacy pqc', sender.pub, sender.kp.privateKey, recipient.pub, mk.mlkemPk));
+  assert.ok(E.isV2Message(wire), 'legacy V2 detected');
+  const out = await E.decryptMessageV2(wire, recipient.kp.privateKey, sender.pub, mk.mlkemSk, recipient.pub);
+  assert.equal(out.plaintext, 'legacy pqc');
+});
+
+test('legacy CRYPTOCHAT_GRPV2 group messages decrypt', async () => {
+  const sender = await makeEcdhIdentity();
+  const r1 = await makeEcdhIdentity();
+  const k1 = await E.mlkemGenerateKeypair();
+  const wire = toLegacy(await E.encryptGroupMessageV2('legacy grp pqc', sender.pub, sender.kp.privateKey, [
+    { handle: '@a', ecdhPubB64: r1.pub, mlkemPkB64: E.buf2b64(k1.mlkemPk.buffer) },
+  ]));
+  assert.ok(E.isV2GroupMessage(wire), 'legacy group V2 detected');
+  const out = await E.decryptGroupMessageV2WithSender(wire, r1.pub, r1.kp.privateKey, E.buf2b64(k1.mlkemSk.buffer), sender.pub);
+  assert.equal(out.plaintext, 'legacy grp pqc');
+});

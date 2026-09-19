@@ -29,11 +29,13 @@
      WIRE FORMAT REGEXES
   ════════════════════════════════════════════════════════════════════ */
 
-  const WIRE_V1   = /CIPHERTEXT_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_GRP  = /CIPHERTEXT_GRP_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_V2   = /CIPHERTEXT_V2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_GRP2 = /CIPHERTEXT_GRPV2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_ANY  = /CIPHERTEXT_(?:V[12]|GRP_V1|GRPV2):[A-Za-z0-9+/=:]+/;
+  // Accept both the current token and the pre-rebrand CRYPTOCHAT_* token.
+  const P1 = '(?:CIPHERTEXT|CRYPTOCHAT)';
+  const WIRE_V1   = new RegExp(`${P1}_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+`);
+  const WIRE_GRP  = new RegExp(`${P1}_GRP_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+`);
+  const WIRE_V2   = new RegExp(`${P1}_V2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+`);
+  const WIRE_GRP2 = new RegExp(`${P1}_GRPV2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+`);
+  const WIRE_ANY  = new RegExp(`${P1}_(?:V[12]|GRP_V1|GRPV2):[A-Za-z0-9+/=:]+`);
 
   const PROCESSED = 'data-cc-v7';
   const HOST_ATTR = 'data-cc-host';

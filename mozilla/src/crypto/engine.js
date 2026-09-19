@@ -131,7 +131,11 @@ export async function hkdfAesKwKey(ikm, info, usage = ['wrapKey', 'unwrapKey']) 
 
 /* ── 1:1 encrypt / decrypt (classical V1) ──────────────────────────── */
 
-const WIRE_V1_REGEX = /^CIPHERTEXT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+// Wire tokens. Messages are sent with the current CIPHERTEXT_* token, but the
+// pre-rebrand CRYPTOCHAT_* token is still accepted on receive for backwards
+// compatibility (see "Compatibility" in the README).
+const WIRE_RECV = '(?:CIPHERTEXT|CRYPTOCHAT)';
+const WIRE_V1_REGEX = new RegExp(`^${WIRE_RECV}_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
 
 export async function encryptMessage(plaintext, sharedKey, senderPubKeyB64) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -161,7 +165,7 @@ export function isV1Message(text) {
 // Encrypt the body once with the DEK. For each recipient, derive an
 // ECDH-based AES-KW wrapping key and wrap the DEK into a per-recipient slot.
 
-const WIRE_GRP_REGEX = /^CIPHERTEXT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_GRP_REGEX = new RegExp(`^${WIRE_RECV}_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
 
 export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPrivateKey, recipients) {
   const dek = await crypto.subtle.generateKey(
@@ -242,8 +246,8 @@ export function isGroupMessage(text) {
    the extension falls back to V1.
    ══════════════════════════════════════════════════════════════════════ */
 
-const WIRE_V2_REGEX = /^CIPHERTEXT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
-const WIRE_GRP2_REGEX = /^CIPHERTEXT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_V2_REGEX = new RegExp(`^${WIRE_RECV}_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
+const WIRE_GRP2_REGEX = new RegExp(`^${WIRE_RECV}_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
 
 const V2_INFO = 'ciphertext-V2';
 

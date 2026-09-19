@@ -2067,7 +2067,8 @@
     const raw = await hkdfBits(ikm, info);
     return crypto.subtle.importKey("raw", raw, ALGO_WRAP, false, usage);
   }
-  var WIRE_V1_REGEX = /^CIPHERTEXT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_RECV = "(?:CIPHERTEXT|CRYPTOCHAT)";
+  var WIRE_V1_REGEX = new RegExp(`^${WIRE_RECV}_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
   async function encryptMessage(plaintext, sharedKey, senderPubKeyB64) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const enc = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, sharedKey, str2buf(plaintext));
@@ -2087,7 +2088,7 @@
   function isV1Message(text) {
     return typeof text === "string" && WIRE_V1_REGEX.test(text.trim());
   }
-  var WIRE_GRP_REGEX = /^CIPHERTEXT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_GRP_REGEX = new RegExp(`^${WIRE_RECV}_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
   async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPrivateKey, recipients) {
     const dek = await crypto.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
@@ -2158,8 +2159,8 @@
   function isGroupMessage(text) {
     return typeof text === "string" && WIRE_GRP_REGEX.test(text.trim());
   }
-  var WIRE_V2_REGEX = /^CIPHERTEXT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
-  var WIRE_GRP2_REGEX = /^CIPHERTEXT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_V2_REGEX = new RegExp(`^${WIRE_RECV}_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
+  var WIRE_GRP2_REGEX = new RegExp(`^${WIRE_RECV}_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$`);
   var V2_INFO = "ciphertext-V2";
   function isPqcAvailable() {
     return !!globalThis.MLKEM768?.MlKem768;

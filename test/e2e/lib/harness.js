@@ -19,11 +19,12 @@ export const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..'
 export const TMP = path.join(ROOT, 'test', 'e2e', '.tmp-addon');
 export const TEST_HOST = 'http://127.0.0.1/*';
 
-const FIXTURE_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>CC E2E</title></head>
+const FIXTURE_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>ciphertext E2E</title></head>
 <body style="font-family:system-ui,sans-serif;margin:24px">
 <h1>ciphertext test composer</h1>
 <p>A fixture page the extension is allowed to run on.</p>
 <textarea id="composer" style="width:420px;height:90px"></textarea>
+<div id="feed" style="margin-top:12px"></div>
 </body></html>`;
 
 /** Copy mozilla/ and widen the match patterns to include the localhost fixture. */

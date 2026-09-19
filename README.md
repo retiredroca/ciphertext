@@ -286,6 +286,16 @@ contacts) or **Replace** (overwrites everything). The `.ccbackup` contains your 
 > an older version may not decrypt after updating, so back up first and keep both sides
 > on the same version when possible.
 
+### Updating & compatibility
+
+- **Newer versions read older messages.** A client on 0.9.1+ detects and decrypts
+  messages written by earlier releases — including the pre-rename `CRYPTOCHAT_*` format —
+  so existing history keeps working.
+- **Older clients can't read newer messages.** A client on 0.8.x or earlier won't
+  recognize `CIPHERTEXT_*` messages; it must be updated to read them. Keep everyone on
+  the same version when possible.
+- Keys, contacts, and share links are unaffected by version changes.
+
 ---
 
 ## GPG / OpenPGP compatibility

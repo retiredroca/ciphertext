@@ -80,3 +80,13 @@ test('send stays disabled until there is a recipient and text', async () => {
   // No contacts exist, so no recipient can be selected → button remains disabled.
   assert.equal(disabled, true);
 });
+
+test('legacy CRYPTOCHAT_* messages are detected in the feed', async () => {
+  await driver.executeScript(`
+    document.getElementById('feed').textContent = 'CRYPTOCHAT_V1:AAAA:BBBB:CCCC';
+  `);
+  const detected = await driver.wait(() => driver.executeScript(`
+    return !!document.querySelector('.cc-overlay-msg, .cc-decrypted');
+  `), 15000, 'legacy CRYPTOCHAT_V1 message should be detected and overlaid');
+  assert.equal(detected, true);
+});

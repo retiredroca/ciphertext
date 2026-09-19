@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ciphertext",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "End-to-end encrypted text on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook — plus optional any-site mode.",
   "permissions": [
     "storage",

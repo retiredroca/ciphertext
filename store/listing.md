@@ -1,6 +1,6 @@
 # ciphertext — store listings
 
-Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.9.0.
+Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.9.1.
 
 ## Single purpose
 
@@ -41,6 +41,8 @@ Features
 • No accounts, no servers, no tracking — keys are stored locally and never leave your device
 
 Back up before updating: export a .ccbackup (My Keys → Export backup) before installing a new version. Your identity and contacts live only in your browser, and a new version may change the message format.
+
+Compatibility: newer versions read messages from older releases; older clients must update to read new-format messages.
 
 Open source under AGPL-3.0.
 
@@ -92,6 +94,8 @@ Features
 • No accounts, no servers, no tracking — private keys stay on your device
 
 Back up before updating: export a .ccbackup (My Keys → Export backup) before installing a new version. Your identity and contacts live only in your browser, and a new version may change the message format.
+
+Compatibility: newer versions read messages from older releases; older clients must update to read new-format messages.
 
 Open source under AGPL-3.0.
 

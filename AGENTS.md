@@ -55,3 +55,17 @@ npm run lint:firefox   # web-ext lint (AMO rules)
 - Commit signing is enabled; make sure the GPG agent is unlocked before
   committing, or the commit will fail on pinentry timeout.
 - Tag releases as `vX.Y.Z` (e.g. `git tag -a v0.8.1 -m "ciphertext v0.8.1"`).
+
+## Wire format compatibility
+
+The wire tokens (`CIPHERTEXT_*`, and the legacy `CRYPTOCHAT_*`) are **protocol
+identifiers, not branding**. Treat them as append-only:
+
+- New builds must **accept the previous token(s) on receive** so existing history
+  and not-yet-updated peers keep working.
+- On **send**, use the current token.
+- Never repurpose a token's meaning; if you must change the format, add a new
+  versioned token and keep reading the old one.
+- Add an interop test (encrypt with the legacy token, decrypt/detect with the new
+  build) whenever the wire format changes.
+
