@@ -40,6 +40,8 @@ Features
 • Encrypted, passphrase-protected backups (.ccbackup)
 • No accounts, no servers, no tracking — keys are stored locally and never leave your device
 
+Back up before updating: export a .ccbackup (My Keys → Export backup) before installing a new version. Your identity and contacts live only in your browser, and a new version may change the message format.
+
 Open source under AGPL-3.0.
 
 ciphertext is alpha software and has not been independently audited. Do not rely on it where your safety or legal exposure depends on it.
@@ -88,6 +90,8 @@ Features
 • Add contacts by public key, GPG/OpenPGP armor, or one-click share link
 • Encrypted .ccbackup export/import to move your identity between browsers
 • No accounts, no servers, no tracking — private keys stay on your device
+
+Back up before updating: export a .ccbackup (My Keys → Export backup) before installing a new version. Your identity and contacts live only in your browser, and a new version may change the message format.
 
 Open source under AGPL-3.0.
 

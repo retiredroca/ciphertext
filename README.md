@@ -4,6 +4,8 @@
 
 Works in **Chrome, Brave, Edge, Firefox, and LibreWolf**. No accounts, no servers. All cryptography runs in your browser using the native Web Crypto API.
 
+> ⚠️ **Back up before updating.** Your identity keys and contacts are stored only in your browser and are never synced. Export a `.ccbackup` (**My Keys → Export backup**) before installing a new version, then import it if anything is missing. A new version may also change the message format, so keep both sides updated. See [Backup](#backup).
+
 ---
 
 ## Features
@@ -268,7 +270,21 @@ Encrypted messages in a feed are detected automatically. If the sender is a know
 
 ### Backup
 
-*My Keys → Export backup* writes a passphrase-protected `.ccbackup` containing your identity (ECDH + ML-KEM) and contacts. Import it on another device, in **Merge** or **Replace** mode.
+Your identity keypair and contacts are stored **only in this browser** — they are not
+synced, and uninstalling the extension or clearing its data deletes them. Always export
+a backup before you update the extension, switch browsers, or move to a new device.
+
+1. Open the popup → **My Keys** → **Export backup**.
+2. Choose a passphrase (at least 6 characters) and confirm it.
+3. Click **Download .ccbackup** and keep the file somewhere safe.
+
+To restore, use **My Keys → Import backup** and choose **Merge** (keeps your current
+contacts) or **Replace** (overwrites everything). The `.ccbackup` contains your identity
+(ECDH + ML-KEM) and contacts, encrypted with your passphrase.
+
+> Updating to a new version can change the message wire format. Messages encrypted with
+> an older version may not decrypt after updating, so back up first and keep both sides
+> on the same version when possible.
 
 ---
 
