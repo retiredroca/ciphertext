@@ -1,18 +1,19 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
 /**
  * CryptoChat — Background entry point
  *
- * Side-effect import of the message handler. Bundled by `npm run bundle`
- * into src/background-bundle.js (classic IIFE, importScripts-safe).
+ * Bundled by `npm run bundle` into src/background-bundle.js (classic IIFE).
  *
- * The optional ML-KEM-768 bundle (src/vendor/mlkem768.js) is loaded by
- * background-loader.js before this bundle and sets globalThis.MLKEM768.
+ * Import order matters: pqc-env.js sets globalThis.MLKEM768 before handler.js
+ * runs its startup logic. ML-KEM-768 (NIST FIPS 203) is bundled in so the
+ * background is fully self-contained — this avoids `importScripts()`, which is
+ * unavailable in Firefox MV3 background event pages.
  */
 
+import './pqc-env.js';
 import * as Engine from '../crypto/engine.js';
 import * as Keystore from '../crypto/keystore.js';
 import './handler.js';
 
-// Exposed for debugging from the service-worker console.
+// Exposed for debugging from the background console.
 globalThis.CCEngine   = Engine;
 globalThis.CCKeystore = Keystore;

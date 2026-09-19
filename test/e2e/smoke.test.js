@@ -40,7 +40,19 @@ test('lock overlay is injected onto a detected input box', async () => {
   assert.ok(await btn.isDisplayed(), 'overlay button is visible');
 });
 
-test('compose panel opens in a shadow root and background responds', async () => {
+test('background responds and ML-KEM is active', async () => {
+  const raw = await driver.wait(async () => {
+    const v = await driver.executeScript('return document.documentElement.getAttribute("data-cc-bg")');
+    return v || false;
+  }, 15000, 'background probe should report a result');
+
+  const res = JSON.parse(raw);
+  assert.ok(!res.error, `background error: ${res.error}`);
+  assert.ok(res.publicKeyB64, 'background returned a public key');
+  assert.ok(res.mlkemPkB64, 'ML-KEM public key present (PQC bundle active)');
+});
+
+test('compose panel opens in a shadow root', async () => {
   await driver.findElement({ css: 'button[data-cc-host="input"]' }).click();
 
   const panelReady = await driver.wait(async () => {
@@ -51,7 +63,7 @@ test('compose panel opens in a shadow root and background responds', async () =>
       const sel = host.shadowRoot.getElementById('cc-recip');
       return !!(ta && sel && /contacts|recipient/i.test(sel.textContent));
     `);
-  }, 15000, 'shadow panel should open with a contact list from the background');
+  }, 15000, 'shadow panel should open');
 
   assert.equal(panelReady, true);
 });

@@ -28,7 +28,6 @@ const B = s => `\x1b[34m${s}\x1b[0m`;
 
 const REQUIRED = [
   'manifest.json',
-  'src/background-loader.js',
   'src/background-bundle.js',
   'src/content.js',
   'src/ui/popup.html',

@@ -7,6 +7,7 @@ export const BANNER = `// SPDX-License-Identifier: AGPL-3.0-or-later
  * Built by scripts/bundle-background.js from:
  *   src/crypto/engine.js
  *   src/crypto/keystore.js
+ *   src/background/pqc-env.js
  *   src/background/index.js + handler.js
  *
  * Regenerate with: npm run bundle

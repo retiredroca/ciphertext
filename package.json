@@ -10,7 +10,6 @@
     "build:chrome": "node chrome/build.js",
     "build:firefox": "node mozilla/build.js",
     "build": "npm run bundle && node chrome/build.js && node mozilla/build.js",
-    "build:pqc": "node scripts/build-pqc.js",
     "sync:firefox": "node scripts/sync-firefox.js",
     "lint:firefox": "web-ext lint --source-dir mozilla",
     "run:librewolf": "node scripts/run-firefox.js",

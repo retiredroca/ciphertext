@@ -34,7 +34,7 @@ Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, 
 
 Features
 • 1:1 and group messages
-• ECDH P-256 + AES-256-GCM, with optional hybrid post-quantum encryption (ML-KEM-768)
+• ECDH P-256 + AES-256-GCM, with hybrid post-quantum encryption (ML-KEM-768)
 • Add contacts by public key, GPG/OpenPGP armor, or a one-click share link
 • Decrypts messages inline; unknown senders show a click-to-decrypt overlay
 • Encrypted, passphrase-protected backups (.ccbackup)
@@ -70,7 +70,7 @@ browser using the Web Crypto API. The extension contains no remote code.
 ### Summary (≤ 250 characters)
 
 ```
-End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook (plus any site, optionally). Keys never leave your browser; optional post-quantum hybrid encryption. No accounts, no servers.
+End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook (plus any site, optionally). Keys never leave your browser; post-quantum hybrid encryption. No accounts, no servers.
 ```
 
 ### Description
@@ -84,7 +84,7 @@ Works in Firefox and LibreWolf on: Discord, Slack, WhatsApp Web, Telegram Web, I
 
 Features
 • 1:1 and group messages
-• ECDH P-256 + AES-256-GCM; optional hybrid post-quantum encryption (ML-KEM-768)
+• ECDH P-256 + AES-256-GCM; hybrid post-quantum encryption (ML-KEM-768)
 • Add contacts by public key, GPG/OpenPGP armor, or one-click share link
 • Encrypted .ccbackup export/import to move your identity between browsers
 • No accounts, no servers, no tracking — private keys stay on your device

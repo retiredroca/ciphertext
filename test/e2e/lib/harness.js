@@ -33,11 +33,30 @@ export function prepareTestAddon() {
     recursive: true,
     filter: p => !p.includes(`${path.sep}dist`),
   });
+
+  // Test-only probe: records whether the background responds, and whether the
+  // ML-KEM bundle is active, onto the fixture's <html> element. Uses the same
+  // promise-style sendMessage the popup relies on.
+  fs.writeFileSync(path.join(TMP, 'src', 'cc-probe.js'), `
+    (function () {
+      chrome.runtime.sendMessage({ type: 'GET_PUBLIC_KEY' })
+        .then((r) => {
+          document.documentElement.setAttribute('data-cc-bg', JSON.stringify({
+            publicKeyB64: r && r.publicKeyB64, mlkemPkB64: r && r.mlkemPkB64,
+          }));
+        })
+        .catch((e) => {
+          document.documentElement.setAttribute('data-cc-bg', JSON.stringify({ error: e.message }));
+        });
+    })();
+  `);
+
   const manifestFile = path.join(TMP, 'manifest.json');
   const m = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
   m.host_permissions = [...new Set([...(m.host_permissions || []), TEST_HOST])];
   for (const cs of m.content_scripts || []) {
     cs.matches = [...new Set([...cs.matches, TEST_HOST])];
+    cs.js = ['src/cc-probe.js', ...cs.js];
   }
   fs.writeFileSync(manifestFile, JSON.stringify(m, null, 2));
   return TMP;

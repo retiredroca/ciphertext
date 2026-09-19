@@ -20,7 +20,7 @@
     "https://retiredroca.github.io/*"
   ],
   "background": {
-    "service_worker": "src/background-loader.js"
+    "service_worker": "src/background-bundle.js"
   },
   "content_scripts": [
     {
