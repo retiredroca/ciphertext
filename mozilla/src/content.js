@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat Content Script v8
+ * ciphertext Content Script v8
  *
  * Platform-aware composer overlay:
  *   - Detects the page's message input(s) using the adapter registered for
  *     this host (src/adapters/*), or a generic selector set otherwise.
  *   - Attaches a small lock button directly to each input box.
- *   - Clicking it opens the CryptoChat compose panel anchored to that input.
+ *   - Clicking it opens the ciphertext compose panel anchored to that input.
  *   - Ciphertext is injected into that same input and sent via the platform's
  *     send button (or Enter).
  *
@@ -29,11 +29,11 @@
      WIRE FORMAT REGEXES
   ════════════════════════════════════════════════════════════════════ */
 
-  const WIRE_V1   = /CRYPTOCHAT_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_GRP  = /CRYPTOCHAT_GRP_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_V2   = /CRYPTOCHAT_V2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_GRP2 = /CRYPTOCHAT_GRPV2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
-  const WIRE_ANY  = /CRYPTOCHAT_(?:V[12]|GRP_V1|GRPV2):[A-Za-z0-9+/=:]+/;
+  const WIRE_V1   = /CIPHERTEXT_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
+  const WIRE_GRP  = /CIPHERTEXT_GRP_V1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
+  const WIRE_V2   = /CIPHERTEXT_V2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
+  const WIRE_GRP2 = /CIPHERTEXT_GRPV2:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+/;
+  const WIRE_ANY  = /CIPHERTEXT_(?:V[12]|GRP_V1|GRPV2):[A-Za-z0-9+/=:]+/;
 
   const PROCESSED = 'data-cc-v7';
   const HOST_ATTR = 'data-cc-host';
@@ -61,7 +61,7 @@
 
   if (IS_GHPAGES) {
     const sig = document.createElement('div');
-    sig.setAttribute('data-cryptochat-installed', 'true');
+    sig.setAttribute('data-ciphertext-installed', 'true');
     sig.style.display = 'none';
     (document.head || document.documentElement).appendChild(sig);
     window.addEventListener('message', async (e) => {
@@ -383,8 +383,8 @@
     const b = document.createElement('button');
     b.type = 'button';
     b.setAttribute(HOST_ATTR, 'input');
-    b.setAttribute('aria-label', 'CryptoChat — encrypt message');
-    b.title = 'CryptoChat — encrypt';
+    b.setAttribute('aria-label', 'ciphertext — encrypt message');
+    b.title = 'ciphertext — encrypt';
     b.innerHTML = LOCK_SVG;
     Object.assign(b.style, {
       position: 'fixed', zIndex: '2147483647', display: 'none',
@@ -854,7 +854,7 @@
   });
 
   } catch (err) {
-    console.error('[CryptoChat] Content script error:', err);
+    console.error('[ciphertext] Content script error:', err);
   }
 
 })();

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Key Store
+ * ciphertext — Key Store
  *
  * Persists the user's identity keypair and all contacts in chrome.storage.local.
  * Keys are stored as base64-encoded SPKI (public) and PKCS8 (private) strings.
@@ -86,7 +86,7 @@ export async function getOrCreateIdentity() {
       mlkemPkB64 = buf2b64(mk.mlkemPk.buffer);
       mlkemSkB64 = buf2b64(mk.mlkemSk.buffer);
     } catch (e) {
-      console.warn('[CryptoChat] ML-KEM keygen failed:', e.message);
+      console.warn('[ciphertext] ML-KEM keygen failed:', e.message);
     }
   }
 

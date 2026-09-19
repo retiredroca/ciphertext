@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Facebook Messenger adapter
+ * ciphertext — Facebook Messenger adapter
  *
  * Facebook Messenger uses a Draft.js contenteditable (often a
  * `p[contenteditable="true"]` inside the composer). Messenger.com now

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — X / Twitter adapter
+ * ciphertext — X / Twitter adapter
  *
  * Covers both legacy DMs (`dmComposerTextInput`) and XChat
  * (`dmComposer`/`xchatSendButton`). Tweet composer is included so the

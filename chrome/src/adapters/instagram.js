@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Instagram DMs adapter
+ * ciphertext — Instagram DMs adapter
  *
  * Instagram DMs use a Lexical contenteditable `div[role="textbox"]` in the
  * thread footer. Class names are hashed per deploy, so we key off roles and

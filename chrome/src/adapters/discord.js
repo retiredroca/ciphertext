@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Discord adapter
+ * ciphertext — Discord adapter
  *
  * Discord's composer is a Slate.js editor. The editable element is
  * `[data-slate-editor="true"]` with `role="textbox"`. Class names

@@ -1,4 +1,4 @@
-# CryptoChat — Chrome / Brave / Edge package
+# ciphertext — Chrome / Brave / Edge package
 
 This directory is the Chrome-family build (MV3, `"background": { "service_worker": ... }`).
 The full documentation lives in the [repository README](../README.md).
@@ -7,7 +7,7 @@ The full documentation lives in the [repository README](../README.md).
 
 ```bash
 npm install
-npm run build:chrome     # → chrome/dist/cryptochat-chrome.zip
+npm run build:chrome     # → chrome/dist/ciphertext-chrome.zip
 ```
 
 1. Open `chrome://extensions/`

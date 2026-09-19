@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — WhatsApp Web + Telegram Web adapter
+ * ciphertext — WhatsApp Web + Telegram Web adapter
  *
  * WhatsApp: footer composer is a contenteditable with `data-tab="10"`;
  * Telegram: `.input-field` / `#editable-message-text`. Send button is
@@ -36,6 +36,6 @@
       '[data-testid="msg-text"]',
       '.message .text-content',
     ],
-    notes: 'Both platforms already E2E-encrypt transport; CryptoChat adds content-layer encryption.',
+    notes: 'Both platforms already E2E-encrypt transport; ciphertext adds content-layer encryption.',
   });
 })();

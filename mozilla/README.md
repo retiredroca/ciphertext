@@ -1,4 +1,4 @@
-# CryptoChat — Firefox package
+# ciphertext — Firefox package
 
 This directory is the Firefox build (MV3, `"background": { "scripts": [...] }`).
 The full documentation lives in the [repository README](../README.md).
@@ -7,7 +7,7 @@ The full documentation lives in the [repository README](../README.md).
 
 ```bash
 npm install
-npm run build:firefox    # syncs runtime from ../chrome, then → mozilla/dist/cryptochat-firefox.xpi
+npm run build:firefox    # syncs runtime from ../chrome, then → mozilla/dist/ciphertext-firefox.xpi
 ```
 
 1. Open `about:debugging` → **This Firefox**

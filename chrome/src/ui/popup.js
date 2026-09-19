@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat Popup v2
+ * ciphertext Popup v2
  * Handles: 1:1 compose, group compose, GPG key import, contacts CRUD, key display
  */
 
@@ -358,7 +358,7 @@ async function renderContacts() {
   });
 
   // Per-contact share link — copies a link the recipient can click to add YOU back
-  // (it uses their public key so they can be added to someone else's CryptoChat)
+  // (it uses their public key so they can be added to someone else's ciphertext)
   list.querySelectorAll('.share-contact-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const { handle, pubkey, fp, name } = btn.dataset;
@@ -402,7 +402,7 @@ async function initKeys() {
 
   $('btn-copy-pgp-hdr').addEventListener('click', () => {
     const key = $('my-pubkey').textContent;
-    const pgp = `-----BEGIN CRYPTOCHAT PUBLIC KEY-----\n${key}\n-----END CRYPTOCHAT PUBLIC KEY-----`;
+    const pgp = `-----BEGIN CIPHERTEXT PUBLIC KEY-----\n${key}\n-----END CIPHERTEXT PUBLIC KEY-----`;
     navigator.clipboard.writeText(pgp).then(() => {
       $('btn-copy-pgp-hdr').textContent = 'Copied!';
       setTimeout(() => { $('btn-copy-pgp-hdr').textContent = 'Copy as PGP header'; }, 1500);
@@ -511,7 +511,7 @@ async function initBackup() {
       const date = new Date().toISOString().slice(0, 10);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = `cryptochat-backup-${date}.ccbackup`;
+      a.download = `ciphertext-backup-${date}.ccbackup`;
       a.click();
       URL.revokeObjectURL(url);
 

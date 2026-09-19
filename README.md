@@ -1,4 +1,4 @@
-# CryptoChat
+# ciphertext
 
 > End-to-end encrypted messaging layered on top of the sites you already use — Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger — without any of those platforms ever seeing your plaintext.
 
@@ -8,13 +8,13 @@ Works in **Chrome, Brave, Edge, Firefox, and LibreWolf**. No accounts, no server
 
 ## Features
 
-- **One lock button per message box.** When a site is enabled, CryptoChat detects its input boxes and overlays a small lock button directly on them. Click it to compose; the ciphertext is injected into that same box and sent.
+- **One lock button per message box.** When a site is enabled, ciphertext detects its input boxes and overlays a small lock button directly on them. Click it to compose; the ciphertext is injected into that same box and sent.
 - **1:1 and group encryption.** Classical ECDH + AES-256-GCM, plus a hybrid post-quantum mode (ECDH + ML-KEM-768).
 - **Reads inline.** Encrypted messages in any feed are auto-detected and decrypted in place; unknown senders get a click-to-decrypt overlay.
-- **Native + GPG keys.** Import a CryptoChat public key, or a Kleopatra/GnuPG armored ECC key.
+- **Native + GPG keys.** Import a ciphertext public key, or a Kleopatra/GnuPG armored ECC key.
 - **Share links.** Generate a link that adds you as a contact in one click.
 - **Encrypted backups.** Move your identity and contacts between browsers with a passphrase-protected `.ccbackup` file.
-- **Optional any-site mode (Firefox/LibreWolf).** Not on the supported list? Grant access and CryptoChat works on any site with a text input. The Chrome build stays lean and requests only the seven platform hosts.
+- **Optional any-site mode (Firefox/LibreWolf).** Not on the supported list? Grant access and ciphertext works on any site with a text input. The Chrome build stays lean and requests only the seven platform hosts.
 
 ---
 
@@ -22,9 +22,9 @@ Works in **Chrome, Brave, Edge, Firefox, and LibreWolf**. No accounts, no server
 
 The lock button attaches to detected message boxes; clicking it opens the composer.
 
-![CryptoChat lock overlay on a message box](assets/screenshots/01-overlay-lock.png)
+![ciphertext lock overlay on a message box](assets/screenshots/01-overlay-lock.png)
 
-![CryptoChat compose panel](assets/screenshots/02-compose-panel.png)
+![ciphertext compose panel](assets/screenshots/02-compose-panel.png)
 
 ![Typed message in the compose panel](assets/screenshots/03-typed.png)
 
@@ -54,7 +54,7 @@ Keys are generated in the browser and stored in `chrome.storage.local`. They nev
 
 ## Supported sites
 
-CryptoChat ships adapters for these hosts. Each adapter declares the input/send/message selectors for that site (see [`src/adapters/`](chrome/src/adapters)).
+ciphertext ships adapters for these hosts. Each adapter declares the input/send/message selectors for that site (see [`src/adapters/`](chrome/src/adapters)).
 
 | Site | Composer | Host(s) |
 |---|---|---|
@@ -66,7 +66,7 @@ CryptoChat ships adapters for these hosts. Each adapter declares the input/send/
 | X / Twitter | React contenteditable | `x.com`, `twitter.com` |
 | Facebook Messenger | Draft.js editor | `www.facebook.com`, `www.messenger.com` |
 
-**Any-site mode (Firefox/LibreWolf):** enable *Settings → Enable on all sites* in the popup. CryptoChat requests access to all sites and registers its generic detector for pages that don't have a dedicated adapter. The Chrome build omits this feature so it requests no broad host permissions, and runs on the seven supported platforms only.
+**Any-site mode (Firefox/LibreWolf):** enable *Settings → Enable on all sites* in the popup. ciphertext requests access to all sites and registers its generic detector for pages that don't have a dedicated adapter. The Chrome build omits this feature so it requests no broad host permissions, and runs on the seven supported platforms only.
 
 ---
 
@@ -79,7 +79,7 @@ All operations use the browser's built-in **Web Crypto API** (`SubtleCrypto`). T
 | Key exchange | ECDH P-256 | One keypair per identity, stored locally |
 | 1:1 encryption | AES-256-GCM | Random 96-bit IV per message |
 | Group encryption | AES-256-GCM + AES-KW | Random DEK per message, wrapped per recipient |
-| Hybrid (PQC) | ECDH P-256 + ML-KEM-768 → HKDF-SHA256 | `CRYPTOCHAT_V2` / `CRYPTOCHAT_GRPV2` |
+| Hybrid (PQC) | ECDH P-256 + ML-KEM-768 → HKDF-SHA256 | `CIPHERTEXT_V2` / `CIPHERTEXT_GRPV2` |
 | GPG bridge | PGP packet parser → SPKI | ECC P-256/P-384/P-521 bridged to SubtleCrypto |
 | Native fingerprint | SHA-256 of SPKI | Shown in the UI for out-of-band verification |
 | GPG fingerprint | OpenPGP v4 (SHA-1) / v5 (SHA-256) | Matches GnuPG/Kleopatra |
@@ -90,22 +90,22 @@ Every encrypted message is plain text any platform can transmit as a normal chat
 
 **1:1 (classical):**
 ```
-CRYPTOCHAT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
+CIPHERTEXT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
 ```
 
 **1:1 (hybrid PQC):**
 ```
-CRYPTOCHAT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
+CIPHERTEXT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
 ```
 
 **Group (classical):**
 ```
-CRYPTOCHAT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+CIPHERTEXT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
 ```
 
 **Group (hybrid PQC):**
 ```
-CRYPTOCHAT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+CIPHERTEXT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
 ```
 
 In the classical group format, `slotsJson` is `[{ h: handle, p: recipientPubKeyB64, dek: wrappedDEK }]`. The body is encrypted once with a random Data Encryption Key (DEK); each slot wraps that DEK for one recipient with their ECDH-derived AES-KW key.
@@ -132,13 +132,13 @@ npm run build         # bundles mlkem into src/background-bundle.js, then packs 
 ## Project structure
 
 ```
-cryptochat-extension/
+ciphertext-extension/
 ├── package.json                 # dev tooling (esbuild, archiver, mlkem) — no runtime deps
 ├── index.html                   # GitHub Pages landing page (served from repo root)
 ├── privacy.html                 # privacy policy (linked from the stores)
 ├── chrome/                      # Chrome / Brave / Edge package (MV3, service_worker)
 │   ├── manifest.json
-│   ├── build.js                 # pack chrome/dist/cryptochat-chrome.zip
+│   ├── build.js                 # pack chrome/dist/ciphertext-chrome.zip
 │   └── src/
 │       ├── background-bundle.js # ★ GENERATED — engine + keystore + handler + ML-KEM
 │       ├── background/          # index.js, handler.js, pqc-env.js (source)
@@ -172,7 +172,7 @@ Requires Node.js only for building. The extension itself has no runtime dependen
 
 ```bash
 git clone https://github.com/retiredroca/ciphertext.git
-cd CryptoChat
+cd ciphertext
 npm install
 npm run build          # bundles + packs both browsers
 ```
@@ -194,15 +194,15 @@ Build the `.xpi` and either drag it onto a build with signature enforcement disa
 
 ```bash
 npm run build:firefox
-# → mozilla/dist/cryptochat-firefox.xpi
+# → mozilla/dist/ciphertext-firefox.xpi
 ```
 
 ### Build & test commands
 
 ```bash
 npm run bundle         # regenerate background-bundle.js from source modules
-npm run build:chrome   # chrome/dist/cryptochat-chrome.zip
-npm run build:firefox  # sync chrome → mozilla, then mozilla/dist/cryptochat-firefox.xpi
+npm run build:chrome   # chrome/dist/ciphertext-chrome.zip
+npm run build:firefox  # sync chrome → mozilla, then mozilla/dist/ciphertext-firefox.xpi
 npm run build          # both
 npm test               # crypto round-trip + handler unit tests (Node)
 npm run test:e2e       # Selenium smoke test in LibreWolf
@@ -245,15 +245,15 @@ npm run run:librewolf  # launch LibreWolf with the extension loaded (hot reload)
 
 ### First-time setup
 
-1. Click the CryptoChat icon in the toolbar → **My Keys**
+1. Click the ciphertext icon in the toolbar → **My Keys**
 2. Copy your public key and share it (it is safe to share publicly)
 3. Add contacts in the **Contacts** tab
 
 ### Adding a contact
 
-- **CryptoChat user:** paste their SPKI base64 key from their *My Keys* tab.
+- **ciphertext user:** paste their SPKI base64 key from their *My Keys* tab.
 - **GPG/Kleopatra user:** export their public key and paste the armored block. ECC P-256/P-384/P-521 import natively; RSA keys are stored for a future bridge.
-- **Share link:** generate a link under *My Keys → Share your key*; anyone who opens it with CryptoChat installed is added in one click.
+- **Share link:** generate a link under *My Keys → Share your key*; anyone who opens it with ciphertext installed is added in one click.
 
 ### Sending
 
@@ -335,7 +335,7 @@ PRs welcome. Especially useful: keeping adapters current, adding new sites, the 
 
 ## Privacy
 
-CryptoChat collects no data and has no servers. Keys and contacts are stored only in
+ciphertext collects no data and has no servers. Keys and contacts are stored only in
 your browser; all cryptography runs locally. The full policy is in
 [`privacy.html`](privacy.html) (published at
 <https://retiredroca.github.io/ciphertext/privacy.html>).

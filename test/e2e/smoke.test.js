@@ -2,7 +2,7 @@
 /**
  * Selenium end-to-end smoke test for the Firefox/LibreWolf build.
  *
- *   npm run build:firefox   # produce mozilla/dist/cryptochat-firefox.xpi
+ *   npm run build:firefox   # produce mozilla/dist/ciphertext-firefox.xpi
  *   npm run test:e2e        # launches LibreWolf, installs a test build
  *
  * Drives the content-script path: installs a copy of the extension whose

@@ -6,9 +6,9 @@
  * Shared build logic for both browser packages.
  *
  *   run('chrome')  → verifies the Chrome manifest, bundles, packs
- *                    chrome/dist/cryptochat-chrome.zip
+ *                    chrome/dist/ciphertext-chrome.zip
  *   run('firefox') → verifies the Firefox manifest, bundles, packs
- *                    mozilla/dist/cryptochat-firefox.xpi
+ *                    mozilla/dist/ciphertext-firefox.xpi
  *
  * Cross-platform: uses the `archiver` package instead of the `zip` CLI.
  */
@@ -64,7 +64,7 @@ export async function bundle(dir) {
 }
 
 export function verify(dir, browser) {
-  console.log(B(`\nCryptoChat — ${browser} package verification\n`));
+  console.log(B(`\nciphertext — ${browser} package verification\n`));
   let ok = true;
   for (const f of REQUIRED) {
     const full = path.join(dir, f);
@@ -133,7 +133,7 @@ export async function run(browser) {
     throw new Error('browser must be "chrome" or "firefox"');
   }
   const dir = dirFor(browser);
-  const name = browser === 'chrome' ? 'cryptochat-chrome.zip' : 'cryptochat-firefox.xpi';
+  const name = browser === 'chrome' ? 'ciphertext-chrome.zip' : 'ciphertext-firefox.xpi';
 
   console.log(B('\nBundling background…'));
   await bundle(dir);

@@ -1,10 +1,10 @@
-# CryptoChat — store listings
+# ciphertext — store listings
 
-Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.8.1.
+Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.9.0.
 
 ## Single purpose
 
-CryptoChat encrypts and decrypts messages in web chat input boxes, so supported
+ciphertext encrypts and decrypts messages in web chat input boxes, so supported
 platforms only ever see ciphertext.
 
 ---
@@ -26,9 +26,9 @@ End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram,
 ### Detailed description
 
 ```
-CryptoChat adds an independent layer of end-to-end encryption on top of the chat sites you already use. The platform stores and transmits only ciphertext — your plaintext never leaves your browser.
+ciphertext adds an independent layer of end-to-end encryption on top of the chat sites you already use. The platform stores and transmits only ciphertext — your plaintext never leaves your browser.
 
-A small lock button appears on the message box. Click it, choose a recipient, type, and send. CryptoChat encrypts locally and injects the ciphertext into the normal input box.
+A small lock button appears on the message box. Click it, choose a recipient, type, and send. ciphertext encrypts locally and injects the ciphertext into the normal input box.
 
 Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger.
 
@@ -42,7 +42,7 @@ Features
 
 Open source under AGPL-3.0.
 
-CryptoChat is alpha software and has not been independently audited. Do not rely on it where your safety or legal exposure depends on it.
+ciphertext is alpha software and has not been independently audited. Do not rely on it where your safety or legal exposure depends on it.
 ```
 
 ### Category
@@ -76,9 +76,9 @@ End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram,
 ### Description
 
 ```
-CryptoChat encrypts your messages in your browser before they reach the platform, so Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook only ever see ciphertext.
+ciphertext encrypts your messages in your browser before they reach the platform, so Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook only ever see ciphertext.
 
-A small lock button appears on the message box. Click it, pick a recipient, type, and send — CryptoChat encrypts locally and injects the ciphertext into the normal input. Messages from contacts are decrypted inline; unknown senders show a click-to-decrypt overlay.
+A small lock button appears on the message box. Click it, pick a recipient, type, and send — ciphertext encrypts locally and injects the ciphertext into the normal input. Messages from contacts are decrypted inline; unknown senders show a click-to-decrypt overlay.
 
 Works in Firefox and LibreWolf on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger. An optional permission enables it on any site with a text field.
 
@@ -91,7 +91,7 @@ Features
 
 Open source under AGPL-3.0.
 
-CryptoChat is alpha software and has not been independently audited. Don't rely on it where your safety or legal exposure depends on it.
+ciphertext is alpha software and has not been independently audited. Don't rely on it where your safety or legal exposure depends on it.
 ```
 
 ---

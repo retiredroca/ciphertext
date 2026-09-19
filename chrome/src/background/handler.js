@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Background message handler
+ * ciphertext — Background message handler
  *
  * Bundled (with engine.js + keystore.js) into src/background-bundle.js by
  * `npm run bundle`. Runs as the MV3 service worker in Chrome and Firefox.
@@ -164,7 +164,7 @@ async function handle(msg) {
         return { error: 'No key found — have you added the sender as a contact?' };
       }
 
-      return { error: 'Unrecognized CryptoChat message format' };
+      return { error: 'Unrecognized ciphertext message format' };
     }
 
     /* ── Identity ────────────────────────────────────────────────────── */

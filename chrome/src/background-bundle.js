@@ -2067,15 +2067,15 @@
     const raw = await hkdfBits(ikm, info);
     return crypto.subtle.importKey("raw", raw, ALGO_WRAP, false, usage);
   }
-  var WIRE_V1_REGEX = /^CRYPTOCHAT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_V1_REGEX = /^CIPHERTEXT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
   async function encryptMessage(plaintext, sharedKey, senderPubKeyB64) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const enc = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, sharedKey, str2buf(plaintext));
-    return ["CRYPTOCHAT_V1", buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(":");
+    return ["CIPHERTEXT_V1", buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(":");
   }
   async function decryptMessage(wireText, sharedKey) {
     const m = wireText.match(WIRE_V1_REGEX);
-    if (!m) throw new Error("Not a valid CryptoChat V1 message");
+    if (!m) throw new Error("Not a valid ciphertext V1 message");
     const [, ivB64, cipB64, senderPubKeyB64] = m;
     const plain = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv: new Uint8Array(b642buf(ivB64)) },
@@ -2087,7 +2087,7 @@
   function isV1Message(text) {
     return typeof text === "string" && WIRE_V1_REGEX.test(text.trim());
   }
-  var WIRE_GRP_REGEX = /^CRYPTOCHAT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_GRP_REGEX = /^CIPHERTEXT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
   async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPrivateKey, recipients) {
     const dek = await crypto.subtle.generateKey(
       { name: "AES-GCM", length: 256 },
@@ -2110,18 +2110,18 @@
         const wdek = await crypto.subtle.wrapKey("raw", dek, wkey, { name: "AES-KW" });
         slots.push({ h: r.handle, p: r.publicKeyB64, dek: buf2b64(wdek) });
       } catch (e) {
-        console.warn("[CryptoChat] Skipping recipient:", r.handle, e.message);
+        console.warn("[ciphertext] Skipping recipient:", r.handle, e.message);
       }
     }
     if (!slots.length) throw new Error("No valid recipients");
     const msgIdBuf = await crypto.subtle.digest("SHA-256", str2buf(buf2b64(body) + Date.now()));
     const msgId = buf2b64(msgIdBuf.slice(0, 8));
     const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
-    return ["CRYPTOCHAT_GRP_V1", msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(":");
+    return ["CIPHERTEXT_GRP_V1", msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(":");
   }
   async function decryptGroupMessage(wireText, ourPubKeyB64, ourPrivateKey, senderPubKeyB64) {
     const m = wireText.match(WIRE_GRP_REGEX);
-    if (!m) throw new Error("Not a valid CryptoChat group message");
+    if (!m) throw new Error("Not a valid ciphertext group message");
     const [, , ivB64, bodyB64, slotsB64] = m;
     const slots = JSON.parse(buf2str(b642buf(slotsB64)));
     const mySlot = slots.find((s) => s.p === ourPubKeyB64);
@@ -2158,9 +2158,9 @@
   function isGroupMessage(text) {
     return typeof text === "string" && WIRE_GRP_REGEX.test(text.trim());
   }
-  var WIRE_V2_REGEX = /^CRYPTOCHAT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
-  var WIRE_GRP2_REGEX = /^CRYPTOCHAT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
-  var V2_INFO = "CryptoChat-V2";
+  var WIRE_V2_REGEX = /^CIPHERTEXT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var WIRE_GRP2_REGEX = /^CIPHERTEXT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+  var V2_INFO = "ciphertext-V2";
   function isPqcAvailable() {
     return !!globalThis.MLKEM768?.MlKem768;
   }
@@ -2198,11 +2198,11 @@
     );
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const bodyBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, hybridKey, str2buf(plaintext));
-    return ["CRYPTOCHAT_V2", buf2b64(iv.buffer), buf2b64(bodyBuf), senderEcdhPubB64, mlkemCtB64].join(":");
+    return ["CIPHERTEXT_V2", buf2b64(iv.buffer), buf2b64(bodyBuf), senderEcdhPubB64, mlkemCtB64].join(":");
   }
   async function decryptMessageV2(wireText, recipientEcdhPriv, senderEcdhPubB64, recipientMlkemSk, recipientEcdhPubB64) {
     const m = wireText.match(WIRE_V2_REGEX);
-    if (!m) throw new Error("Not a valid CryptoChat V2 message");
+    if (!m) throw new Error("Not a valid ciphertext V2 message");
     const [, ivB64, bodyB64, embeddedSenderPub, mlkemCtB64] = m;
     const senderPubToUse = senderEcdhPubB64 || embeddedSenderPub;
     if (!senderPubToUse) throw new Error("No sender key available");
@@ -2261,7 +2261,7 @@
     const msgIdBuf = await crypto.subtle.digest("SHA-256", str2buf(buf2b64(bodyBuf) + Date.now()));
     const msgId = buf2b64(msgIdBuf.slice(0, 8));
     const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
-    return ["CRYPTOCHAT_GRPV2", msgId, buf2b64(iv.buffer), buf2b64(bodyBuf), slotsB64].join(":");
+    return ["CIPHERTEXT_GRPV2", msgId, buf2b64(iv.buffer), buf2b64(bodyBuf), slotsB64].join(":");
   }
   async function decryptGroupMessageV2WithSender(wireText, ourEcdhPubB64, ourEcdhPriv, ourMlkemSkB64, senderEcdhPubB64) {
     const m = wireText.match(WIRE_GRP2_REGEX);
@@ -2535,7 +2535,7 @@
         mlkemPkB64 = buf2b64(mk.mlkemPk.buffer);
         mlkemSkB64 = buf2b64(mk.mlkemSk.buffer);
       } catch (e) {
-        console.warn("[CryptoChat] ML-KEM keygen failed:", e.message);
+        console.warn("[ciphertext] ML-KEM keygen failed:", e.message);
       }
     }
     await sSet(K_IDENTITY, { publicKeyB64, privateKeyB64, fingerprint, mlkemPkB64, mlkemSkB64 });
@@ -2806,7 +2806,7 @@
           }
           return { error: "No key found \u2014 have you added the sender as a contact?" };
         }
-        return { error: "Unrecognized CryptoChat message format" };
+        return { error: "Unrecognized ciphertext message format" };
       }
       /* ── Identity ────────────────────────────────────────────────────── */
       case "GET_PUBLIC_KEY": {

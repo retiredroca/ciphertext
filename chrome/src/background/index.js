@@ -1,5 +1,5 @@
 /**
- * CryptoChat — Background entry point
+ * ciphertext — Background entry point
  *
  * Bundled by `npm run bundle` into src/background-bundle.js (classic IIFE).
  *

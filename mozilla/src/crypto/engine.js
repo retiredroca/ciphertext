@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /**
- * CryptoChat — Crypto Engine
+ * ciphertext — Crypto Engine
  *
  * This is the runtime source of truth. `src/background-bundle.js` is
  * generated from this file (via `npm run bundle`) and inlined into a single
@@ -13,12 +13,12 @@
  * GPG parsing:   RFC 4880 / RFC 6637 / RFC 9580 OpenPGP public keys
  *
  * 1:1 wire formats:
- *   CRYPTOCHAT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
- *   CRYPTOCHAT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
+ *   CIPHERTEXT_V1:<b64_iv>:<b64_ciphertext>:<b64_senderPubKey>
+ *   CIPHERTEXT_V2:<b64_iv>:<b64_ciphertext>:<b64_senderEcdhPub>:<b64_mlkemCt>
  *
  * Group wire formats:
- *   CRYPTOCHAT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
- *   CRYPTOCHAT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+ *   CIPHERTEXT_GRP_V1:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
+ *   CIPHERTEXT_GRPV2:<b64_msgId>:<b64_iv>:<b64_encBody>:<b64_slotsJson>
  */
 
 /* ── Encoding helpers ──────────────────────────────────────────────── */
@@ -131,17 +131,17 @@ export async function hkdfAesKwKey(ikm, info, usage = ['wrapKey', 'unwrapKey']) 
 
 /* ── 1:1 encrypt / decrypt (classical V1) ──────────────────────────── */
 
-const WIRE_V1_REGEX = /^CRYPTOCHAT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_V1_REGEX = /^CIPHERTEXT_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
 
 export async function encryptMessage(plaintext, sharedKey, senderPubKeyB64) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sharedKey, str2buf(plaintext));
-  return ['CRYPTOCHAT_V1', buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(':');
+  return ['CIPHERTEXT_V1', buf2b64(iv.buffer), buf2b64(enc), senderPubKeyB64].join(':');
 }
 
 export async function decryptMessage(wireText, sharedKey) {
   const m = wireText.match(WIRE_V1_REGEX);
-  if (!m) throw new Error('Not a valid CryptoChat V1 message');
+  if (!m) throw new Error('Not a valid ciphertext V1 message');
   const [, ivB64, cipB64, senderPubKeyB64] = m;
   const plain = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: new Uint8Array(b642buf(ivB64)) },
@@ -161,7 +161,7 @@ export function isV1Message(text) {
 // Encrypt the body once with the DEK. For each recipient, derive an
 // ECDH-based AES-KW wrapping key and wrap the DEK into a per-recipient slot.
 
-const WIRE_GRP_REGEX = /^CRYPTOCHAT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_GRP_REGEX = /^CIPHERTEXT_GRP_V1:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
 
 export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPrivateKey, recipients) {
   const dek = await crypto.subtle.generateKey(
@@ -180,7 +180,7 @@ export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPriv
       const wdek = await crypto.subtle.wrapKey('raw', dek, wkey, { name: 'AES-KW' });
       slots.push({ h: r.handle, p: r.publicKeyB64, dek: buf2b64(wdek) });
     } catch (e) {
-      console.warn('[CryptoChat] Skipping recipient:', r.handle, e.message);
+      console.warn('[ciphertext] Skipping recipient:', r.handle, e.message);
     }
   }
   if (!slots.length) throw new Error('No valid recipients');
@@ -189,12 +189,12 @@ export async function encryptGroupMessage(plaintext, senderPubKeyB64, senderPriv
   const msgId    = buf2b64(msgIdBuf.slice(0, 8));
   const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
 
-  return ['CRYPTOCHAT_GRP_V1', msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(':');
+  return ['CIPHERTEXT_GRP_V1', msgId, buf2b64(iv.buffer), buf2b64(body), slotsB64].join(':');
 }
 
 export async function decryptGroupMessage(wireText, ourPubKeyB64, ourPrivateKey, senderPubKeyB64) {
   const m = wireText.match(WIRE_GRP_REGEX);
-  if (!m) throw new Error('Not a valid CryptoChat group message');
+  if (!m) throw new Error('Not a valid ciphertext group message');
   const [, , ivB64, bodyB64, slotsB64] = m;
 
   const slots  = JSON.parse(buf2str(b642buf(slotsB64)));
@@ -242,10 +242,10 @@ export function isGroupMessage(text) {
    the extension falls back to V1.
    ══════════════════════════════════════════════════════════════════════ */
 
-const WIRE_V2_REGEX = /^CRYPTOCHAT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
-const WIRE_GRP2_REGEX = /^CRYPTOCHAT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_V2_REGEX = /^CIPHERTEXT_V2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
+const WIRE_GRP2_REGEX = /^CIPHERTEXT_GRPV2:([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+):([A-Za-z0-9+/=]+)$/;
 
-const V2_INFO = 'CryptoChat-V2';
+const V2_INFO = 'ciphertext-V2';
 
 export function isPqcAvailable() {
   return !!(globalThis.MLKEM768?.MlKem768);
@@ -302,7 +302,7 @@ export async function encryptMessageV2(plaintext, senderEcdhPubB64, senderEcdhPr
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const bodyBuf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, hybridKey, str2buf(plaintext));
 
-  return ['CRYPTOCHAT_V2', buf2b64(iv.buffer), buf2b64(bodyBuf), senderEcdhPubB64, mlkemCtB64].join(':');
+  return ['CIPHERTEXT_V2', buf2b64(iv.buffer), buf2b64(bodyBuf), senderEcdhPubB64, mlkemCtB64].join(':');
 }
 
 /**
@@ -316,7 +316,7 @@ export async function encryptMessageV2(plaintext, senderEcdhPubB64, senderEcdhPr
  */
 export async function decryptMessageV2(wireText, recipientEcdhPriv, senderEcdhPubB64, recipientMlkemSk, recipientEcdhPubB64) {
   const m = wireText.match(WIRE_V2_REGEX);
-  if (!m) throw new Error('Not a valid CryptoChat V2 message');
+  if (!m) throw new Error('Not a valid ciphertext V2 message');
   const [, ivB64, bodyB64, embeddedSenderPub, mlkemCtB64] = m;
 
   const senderPubToUse = senderEcdhPubB64 || embeddedSenderPub;
@@ -394,7 +394,7 @@ export async function encryptGroupMessageV2(plaintext, senderEcdhPubB64, senderE
   const msgId = buf2b64(msgIdBuf.slice(0, 8));
   const slotsB64 = buf2b64(str2buf(JSON.stringify(slots)));
 
-  return ['CRYPTOCHAT_GRPV2', msgId, buf2b64(iv.buffer), buf2b64(bodyBuf), slotsB64].join(':');
+  return ['CIPHERTEXT_GRPV2', msgId, buf2b64(iv.buffer), buf2b64(bodyBuf), slotsB64].join(':');
 }
 
 export async function decryptGroupMessageV2WithSender(wireText, ourEcdhPubB64, ourEcdhPriv, ourMlkemSkB64, senderEcdhPubB64) {

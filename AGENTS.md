@@ -54,4 +54,4 @@ npm run lint:firefox   # web-ext lint (AMO rules)
 - Only commit when asked.
 - Commit signing is enabled; make sure the GPG agent is unlocked before
   committing, or the commit will fail on pinentry timeout.
-- Tag releases as `vX.Y.Z` (e.g. `git tag -a v0.8.1 -m "CryptoChat v0.8.1"`).
+- Tag releases as `vX.Y.Z` (e.g. `git tag -a v0.8.1 -m "ciphertext v0.8.1"`).

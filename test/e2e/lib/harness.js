@@ -21,7 +21,7 @@ export const TEST_HOST = 'http://127.0.0.1/*';
 
 const FIXTURE_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>CC E2E</title></head>
 <body style="font-family:system-ui,sans-serif;margin:24px">
-<h1>CryptoChat test composer</h1>
+<h1>ciphertext test composer</h1>
 <p>A fixture page the extension is allowed to run on.</p>
 <textarea id="composer" style="width:420px;height:90px"></textarea>
 </body></html>`;

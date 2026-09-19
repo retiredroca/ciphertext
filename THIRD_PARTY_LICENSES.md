@@ -1,6 +1,6 @@
 # Third-party licenses
 
-CryptoChat itself is licensed under **AGPL-3.0-or-later** (see `LICENSE`).
+ciphertext itself is licensed under **AGPL-3.0-or-later** (see `LICENSE`).
 The extension has no third-party **runtime** dependencies for its default
 build. The following packages are used at build time or in optional bundles.
 
