@@ -1,6 +1,6 @@
 # CryptoChat — store listings
 
-Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.8.0.
+Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.8.1.
 
 ## Single purpose
 

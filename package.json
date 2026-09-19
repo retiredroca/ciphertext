@@ -1,6 +1,6 @@
 {
   "name": "cryptochat-extension",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "type": "module",
   "description": "End-to-end encrypted messaging layered on top of any web text input.",
