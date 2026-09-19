@@ -1,6 +1,6 @@
 {
   "name": "ciphertext-extension",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "type": "module",
   "description": "End-to-end encrypted messaging layered on top of any web text input.",

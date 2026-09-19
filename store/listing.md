@@ -1,6 +1,6 @@
 # ciphertext — store listings
 
-Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.9.1.
+Copy for the Chrome Web Store and Mozilla Add-ons (AMO) listings. Version 0.9.2.
 
 ## Single purpose
 
@@ -14,23 +14,15 @@ platforms only ever see ciphertext.
 ### Short description (≤ 132 characters)
 
 ```
-End-to-end encryption for Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook. No servers; keys stay local.
-```
-
-Alternate:
-
-```
-End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook. Keys never leave your device.
+End-to-end encryption for your web chats. Messages are encrypted locally, so the site only ever sees ciphertext.
 ```
 
 ### Detailed description
 
 ```
-ciphertext adds an independent layer of end-to-end encryption on top of the chat sites you already use. The platform stores and transmits only ciphertext — your plaintext never leaves your browser.
+ciphertext adds an independent layer of end-to-end encryption to the web chat and messaging sites you already use. The site stores and transmits only ciphertext — your plaintext never leaves your browser.
 
-A small lock button appears on the message box. Click it, choose a recipient, type, and send. ciphertext encrypts locally and injects the ciphertext into the normal input box.
-
-Works on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger.
+A small lock button appears on the message box. Click it, choose a recipient, type, and send. ciphertext encrypts locally and injects the ciphertext into the normal input box. Messages from your contacts are decrypted inline.
 
 Features
 • 1:1 and group messages
@@ -74,17 +66,17 @@ browser using the Web Crypto API. The extension contains no remote code.
 ### Summary (≤ 250 characters)
 
 ```
-End-to-end encrypted messaging on Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook (plus any site, optionally). Keys never leave your browser; post-quantum hybrid encryption. No accounts, no servers.
+End-to-end encryption for your web chats. Messages are encrypted locally in your browser, so the site only ever sees ciphertext. Keys never leave your device; post-quantum hybrid encryption.
 ```
 
 ### Description
 
 ```
-ciphertext encrypts your messages in your browser before they reach the platform, so Discord, Slack, WhatsApp, Telegram, Instagram, X, and Facebook only ever see ciphertext.
+ciphertext encrypts your messages in your browser before they reach the site, so the site only ever sees ciphertext.
 
 A small lock button appears on the message box. Click it, pick a recipient, type, and send — ciphertext encrypts locally and injects the ciphertext into the normal input. Messages from contacts are decrypted inline; unknown senders show a click-to-decrypt overlay.
 
-Works in Firefox and LibreWolf on: Discord, Slack, WhatsApp Web, Telegram Web, Instagram DMs, X/Twitter, and Facebook Messenger. An optional permission enables it on any site with a text field.
+Works in Firefox and LibreWolf. An optional permission can enable it on other sites with a text field.
 
 Features
 • 1:1 and group messages
